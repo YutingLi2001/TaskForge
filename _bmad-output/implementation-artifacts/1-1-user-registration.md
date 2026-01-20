@@ -165,10 +165,13 @@ npm install -D tailwindcss postcss autoprefixer
 
 ### References
 
-- [Architecture: Project Structure](../_bmad-output/planning-artifacts/architecture.md#project-structure)
-- [Architecture: Authentication & Security](../_bmad-output/planning-artifacts/architecture.md#authentication--security)
-- [Project Context: Python/FastAPI Rules](../_bmad-output/project-context.md#pythonfastapi-rules)
-- [Project Context: Naming Conventions](../_bmad-output/project-context.md#naming-conventions)
+**Planning Documents:**
+- [PRD: FR1 - User Registration](../planning-artifacts/prd.md#User-Management)
+- [Architecture: Project Structure](../planning-artifacts/architecture.md#Project-Structure)
+- [Architecture: Authentication & Security](../planning-artifacts/architecture.md#Core-Architectural-Decisions)
+- [Epics: Story 1.1](../planning-artifacts/epics.md#Story-1.1-User-Registration)
+- [Project Context: Python/FastAPI Rules](../project-context.md#Python/FastAPI-Rules)
+- [Project Context: Naming Conventions](../project-context.md#Naming-Conventions)
 
 ## Dev Agent Record
 
