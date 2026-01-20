@@ -87,4 +87,5 @@ workflow_status:
       - id: "sprint-planning"
         command: "/bmad:bmm:workflows:sprint-planning"
         agent: "sm"
-        status: "required"
+        status: "_bmad-output/implementation-artifacts/sprint-status.yaml"
+        completed: "2026-01-19"
