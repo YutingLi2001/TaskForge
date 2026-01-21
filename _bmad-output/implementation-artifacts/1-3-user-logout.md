@@ -1,6 +1,6 @@
 # Story 1.3: User Logout
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -18,35 +18,35 @@ So that **I can secure my session and prevent unauthorized access**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Dashboard Layout with Logout Button** (AC: 1, 5)
-  - [ ] Create `frontend/src/components/Header.tsx` with app header containing logout button
-  - [ ] Add user email display in header (read from localStorage or API)
-  - [ ] Style header with Tailwind CSS matching existing design
-  - [ ] Import and use Header in Dashboard page
+- [x] **Task 1: Dashboard Layout with Logout Button** (AC: 1, 5)
+  - [x] Create `frontend/src/components/Header.tsx` with app header containing logout button
+  - [x] Add user email display in header (read from localStorage or API)
+  - [x] Style header with Tailwind CSS matching existing design
+  - [x] Import and use Header in Dashboard page
 
-- [ ] **Task 2: Logout Handler Implementation** (AC: 1, 2, 3)
-  - [ ] Create `useLogout` hook or handler function in `frontend/src/hooks/useLogout.ts`
-  - [ ] Call `authApi.logout(refresh_token)` to revoke server-side token
-  - [ ] Clear `token` from localStorage
-  - [ ] Clear `refresh_token` from localStorage
-  - [ ] Navigate to `/login` after logout
-  - [ ] Handle errors gracefully (still clear tokens and redirect even if API call fails)
+- [x] **Task 2: Logout Handler Implementation** (AC: 1, 2, 3)
+  - [x] Create `useLogout` hook or handler function in `frontend/src/hooks/useLogout.ts`
+  - [x] Call `authApi.logout(refresh_token)` to revoke server-side token
+  - [x] Clear `token` from localStorage
+  - [x] Clear `refresh_token` from localStorage
+  - [x] Navigate to `/login` after logout
+  - [x] Handle errors gracefully (still clear tokens and redirect even if API call fails)
 
-- [ ] **Task 3: Update Dashboard Page** (AC: 1, 5)
-  - [ ] Import Header component into Dashboard
-  - [ ] Replace inline Dashboard component in App.tsx with proper page file
-  - [ ] Create `frontend/src/pages/Dashboard.tsx` with Header integration
+- [x] **Task 3: Update Dashboard Page** (AC: 1, 5)
+  - [x] Import Header component into Dashboard
+  - [x] Replace inline Dashboard component in App.tsx with proper page file
+  - [x] Create `frontend/src/pages/Dashboard.tsx` with Header integration
 
 - [x] **Task 4: Backend Testing** (AC: 2) - *Already complete from Story 1.2*
   - [x] Test: logout returns 204 and revokes token
   - [x] Test: reusing revoked refresh token on /refresh returns 401
   - See: `backend/tests/api/test_auth_login_api.py:174` - `test_refresh_token_rotation_and_logout`
 
-- [ ] **Task 5: Frontend Testing** (AC: 1, 3, 5)
-  - [ ] Add test: logout button is visible on Dashboard
-  - [ ] Add test: clicking logout clears localStorage tokens
-  - [ ] Add test: clicking logout redirects to /login
-  - [ ] Add test: logout calls the API endpoint
+- [x] **Task 5: Frontend Testing** (AC: 1, 3, 5)
+  - [x] Add test: logout button is visible on Dashboard
+  - [x] Add test: clicking logout clears localStorage tokens
+  - [x] Add test: clicking logout redirects to /login
+  - [x] Add test: logout calls the API endpoint
 
 ## Dev Notes
 
@@ -185,25 +185,33 @@ Note: Returns 204 even if token is invalid (idempotent operation).
 
 ### Agent Model Used
 
-(To be filled by dev agent)
+Codex (GPT-5)
+
+### Implementation Plan
+
+- Build the Header component with logout button and optional email display.
+- Implement a logout hook that revokes refresh tokens, clears storage, and redirects.
+- Move dashboard UI into a page component and wire routing.
+- Add logout-focused tests and run the frontend test suite.
 
 ### Completion Notes List
 
-(To be filled by dev agent)
+- Added Header component and Dashboard page integration with logout button.
+- Implemented `useLogout` hook calling `authApi.logout`, clearing tokens, and redirecting.
+- Updated app routing to use the Dashboard page and added a token presence guard.
+- Tests: `scripts/windows/run-frontend-tests.ps1` (pass)
+- Tests: `scripts/windows/run-backend-tests.ps1` (pass; warnings in log: FastAPI on_event deprecation, sqlite connection not closed)
 
 ### File List
 
-**To Create (Frontend Only):**
 - frontend/src/components/Header.tsx
-- frontend/src/hooks/useLogout.ts
-- frontend/src/pages/Dashboard.tsx
 - frontend/src/components/Header.test.tsx
-- frontend/src/hooks/useLogout.test.ts
+- frontend/src/hooks/useLogout.ts
+- frontend/src/hooks/useLogout.test.tsx
+- frontend/src/pages/Dashboard.tsx
+- frontend/src/pages/Dashboard.test.tsx
+- frontend/src/App.tsx
 
-**To Modify:**
-- frontend/src/App.tsx (import Dashboard from pages, remove inline component)
+### Change Log
 
-**Already Exists (from Story 1.2):**
-- backend/app/routers/auth.py - logout endpoint at lines 162-172
-- frontend/src/api/client.ts - authApi.logout() function at lines 91-92
-- backend/tests/api/test_auth_login_api.py:174 - `test_refresh_token_rotation_and_logout` (covers AC 2)
+- 2026-01-21: Implemented logout UI/handler, added edge-case frontend tests, ran test scripts.
