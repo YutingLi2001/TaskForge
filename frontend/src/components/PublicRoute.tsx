@@ -42,10 +42,14 @@ export default function PublicRoute({ children }: PublicRouteProps) {
           setStatus('authed');
         }
       })
-      .catch(() => {
-        localStorage.removeItem('token');
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : '';
+        const isAuthError = message.toLowerCase().includes('401') || message.toLowerCase().includes('403');
+        if (isAuthError) {
+          localStorage.removeItem('token');
+        }
         if (active) {
-          setStatus('guest');
+          setStatus(isAuthError ? 'guest' : 'authed');
         }
       });
     return () => {

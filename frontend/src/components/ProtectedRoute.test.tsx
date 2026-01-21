@@ -116,7 +116,7 @@ describe('ProtectedRoute', () => {
 
   it('redirects to login when server rejects token', async () => {
     localStorage.setItem('token', makeToken(60));
-    vi.mocked(authApi.me).mockRejectedValue(new Error('Invalid token'));
+    vi.mocked(authApi.me).mockRejectedValue(new Error('401 Unauthorized'));
 
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
@@ -135,5 +135,28 @@ describe('ProtectedRoute', () => {
     );
 
     expect(await screen.findByText('Login')).toBeInTheDocument();
+  });
+
+  it('allows access when server errors are transient', async () => {
+    localStorage.setItem('token', makeToken(60));
+    vi.mocked(authApi.me).mockRejectedValue(new Error('500 Server error'));
+
+    render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <Routes>
+          <Route path="/login" element={<div>Login</div>} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <div>Dashboard</div>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Dashboard')).toBeInTheDocument();
   });
 });

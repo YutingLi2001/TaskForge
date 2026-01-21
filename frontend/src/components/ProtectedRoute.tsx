@@ -43,10 +43,14 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
           setStatus('allowed');
         }
       })
-      .catch(() => {
-        localStorage.removeItem('token');
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : '';
+        const isAuthError = message.toLowerCase().includes('401') || message.toLowerCase().includes('403');
+        if (isAuthError) {
+          localStorage.removeItem('token');
+        }
         if (active) {
-          setStatus('denied');
+          setStatus(isAuthError ? 'denied' : 'allowed');
         }
       });
     return () => {

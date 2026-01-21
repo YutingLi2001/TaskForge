@@ -87,7 +87,7 @@ describe('PublicRoute', () => {
 
   it('keeps unauthenticated users on login when token is rejected', async () => {
     localStorage.setItem('token', makeToken(60));
-    vi.mocked(authApi.me).mockRejectedValue(new Error('Invalid token'));
+    vi.mocked(authApi.me).mockRejectedValue(new Error('401 Unauthorized'));
 
     render(
       <MemoryRouter initialEntries={['/login']}>
@@ -103,5 +103,25 @@ describe('PublicRoute', () => {
     );
 
     expect(await screen.findByText('Login')).toBeInTheDocument();
+  });
+
+  it('redirects authenticated users when server error is transient', async () => {
+    localStorage.setItem('token', makeToken(60));
+    vi.mocked(authApi.me).mockRejectedValue(new Error('500 Server error'));
+
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <Routes>
+          <Route path="/login" element={
+            <PublicRoute>
+              <div>Login</div>
+            </PublicRoute>
+          } />
+          <Route path="/dashboard" element={<div>Dashboard</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Dashboard')).toBeInTheDocument();
   });
 });
