@@ -88,6 +88,7 @@ export const authApi = {
     api.post<ApiResponse<LoginResponse>>('/auth/login', data),
   refresh: (refresh_token: string) =>
     api.post<ApiResponse<RefreshResponse>>('/auth/refresh', { refresh_token }),
+  me: () => api.get<ApiResponse<UserData>>('/auth/me'),
   logout: (refresh_token: string) =>
     api.post<null>('/auth/logout', { refresh_token }),
 };

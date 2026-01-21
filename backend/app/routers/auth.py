@@ -15,11 +15,14 @@ from ..schemas.user import (
     RefreshResponse,
     UserCreate,
     UserDataResponse,
+    UserPublicDataResponse,
+    UserPublicResponse,
     UserResponse,
 )
 from ..utils.auth import (
     create_access_token,
     create_refresh_token,
+    get_current_user,
     hash_password,
     hash_refresh_token,
     verify_password,
@@ -170,3 +173,9 @@ def logout(payload: RefreshRequest, db: Session = Depends(get_db)):
         db.add(user)
         db.commit()
     return None
+
+
+@router.get("/me", response_model=UserPublicDataResponse)
+def get_me(current_user: User = Depends(get_current_user)):
+    """Return the current authenticated user."""
+    return UserPublicDataResponse(data=UserPublicResponse.model_validate(current_user))
