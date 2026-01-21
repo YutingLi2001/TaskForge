@@ -128,6 +128,40 @@ Error Response (401 - invalid credentials):
 }
 ```
 
+**POST /api/auth/refresh**
+
+Request:
+```json
+{
+  "refresh_token": "r1eF...longtoken..."
+}
+```
+
+Success Response (200):
+```json
+{
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refresh_token": "r1eF...newtoken...",
+    "token_type": "bearer"
+  }
+}
+```
+
+**POST /api/auth/logout**
+
+Request:
+```json
+{
+  "refresh_token": "r1eF...longtoken..."
+}
+```
+
+Success Response (204):
+```
+No Content
+```
+
 ### References
 
 **Planning Documents:**
