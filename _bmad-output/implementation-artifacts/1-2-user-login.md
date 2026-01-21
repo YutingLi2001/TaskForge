@@ -1,3 +1,75 @@
+commit 1a605586202e06d6db0fa439b236db0b2519363a
+Merge: f55b8d3 ddb1959 8184422
+Author: Yuting <2001yuting.li@gmail.com>
+Date:   Tue Jan 20 18:26:41 2026 -0600
+
+    WIP on develop: f55b8d3 docs: fix reference paths in story 1-1 documentation
+
+diff --cc _bmad-output/implementation-artifacts/sprint-status.yaml
+index f9acb1e,f9acb1e,0000000..fa67f03
+mode 100644,100644,000000..100644
+--- a/_bmad-output/implementation-artifacts/sprint-status.yaml
++++ b/_bmad-output/implementation-artifacts/sprint-status.yaml
+@@@@ -1,58 -1,58 -1,0 +1,58 @@@@
+  +# generated: 2026-01-19
+  +# project: TaskForge
+  +# tracking_system: file-system
+  +# story_location: _bmad-output/implementation-artifacts
+  +
+  +# STATUS DEFINITIONS:
+  +# ==================
+  +# Epic Status:
+  +#   - backlog: Epic not yet started
+  +#   - in-progress: Epic actively being worked on
+  +#   - done: All stories in epic completed
+  +#
+  +# Story Status:
+  +#   - backlog: Story only exists in epic file
+  +#   - ready-for-dev: Story file created, ready for development
+  +#   - in-progress: Developer actively working on implementation
+  +#   - review: Implementation complete, ready for review
+  +#   - done: Story completed
+  +#
+  +# Retrospective Status:
+  +#   - optional: Can be completed but not required
+  +#   - done: Retrospective has been completed
+  +#
+  +# WORKFLOW NOTES:
+  +# ===============
+  +# - Mark epic as 'in-progress' when starting work on its first story
+  +# - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
+  +# - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
+  +
+  +generated: 2026-01-19
+  +project: TaskForge
+  +tracking_system: file-system
+  +story_location: _bmad-output/implementation-artifacts
+  +
+  +development_status:
+  +  # Epic 1: User Authentication
+  +  epic-1: in-progress
+  +  1-1-user-registration: done
+--   1-2-user-login: backlog
++++  1-2-user-login: ready-for-dev
+  +  1-3-user-logout: backlog
+  +  1-4-protected-routes: backlog
+  +  epic-1-retrospective: optional
+  +
+  +  # Epic 2: Project Management
+  +  epic-2: backlog
+  +  2-1-project-list-create: backlog
+  +  2-2-view-project-details: backlog
+  +  2-3-edit-project: backlog
+  +  2-4-delete-project: backlog
+  +  epic-2-retrospective: optional
+  +
+  +  # Epic 3: Task Management
+  +  epic-3: backlog
+  +  3-1-view-tasks-create: backlog
+  +  3-2-edit-task: backlog
+  +  3-3-toggle-task-status: backlog
+  +  3-4-delete-task: backlog
+  +  epic-3-retrospective: optional
 # Story 1.2: User Login
 
 Status: ready-for-dev
@@ -179,15 +251,15 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
 ### Previous Story Intelligence (from 1-1-user-registration)
 
 **Key Learnings:**
-1. ✅ Password verification function `verify_password()` already exists in `utils/auth.py`
-2. ✅ User model has email + hashed_password fields ready for login
-3. ✅ API response pattern: wrap in `{data: {...}}` format
-4. ✅ Frontend uses React functional components with useState hooks
-5. ✅ Error handling: display error messages in red alert boxes
-6. ✅ Success handling: display success messages in green alert boxes
-7. ✅ Form validation: use HTML5 required + minLength attributes
-8. ✅ API client already has token injection logic (client.ts:15-19)
-9. ✅ Tailwind CSS classes for consistent styling
+1. ??? Password verification function `verify_password()` already exists in `utils/auth.py`
+2. ??? User model has email + hashed_password fields ready for login
+3. ??? API response pattern: wrap in `{data: {...}}` format
+4. ??? Frontend uses React functional components with useState hooks
+5. ??? Error handling: display error messages in red alert boxes
+6. ??? Success handling: display success messages in green alert boxes
+7. ??? Form validation: use HTML5 required + minLength attributes
+8. ??? API client already has token injection logic (client.ts:15-19)
+9. ??? Tailwind CSS classes for consistent styling
 
 **Files Already Created (from 1-1):**
 - `backend/app/routers/auth.py` - ADD login endpoint here
@@ -204,14 +276,14 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
 ### Git Intelligence
 
 **Recent Commits Analysis:**
-- ✅ Story 1-1 merged to develop branch
-- ✅ Registration feature fully implemented and tested
-- ✅ Project scaffolding complete (backend + frontend + docker)
+- ??? Story 1-1 merged to develop branch
+- ??? Registration feature fully implemented and tested
+- ??? Project scaffolding complete (backend + frontend + docker)
 - Pattern: Feature branches merged to develop
 
 **Recommended Approach:**
 1. Create feature branch: `feature/story-1-2-login`
-2. Follow same commit pattern as 1-1: implement → test → merge
+2. Follow same commit pattern as 1-1: implement ??? test ??? merge
 3. Update sprint-status.yaml after completion
 
 ### Dependencies and Environment
