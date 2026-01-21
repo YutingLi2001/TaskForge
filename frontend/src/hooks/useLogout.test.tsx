@@ -52,6 +52,7 @@ describe('useLogout', () => {
     });
     expect(localStorage.getItem('token')).toBeNull();
     expect(localStorage.getItem('refresh_token')).toBeNull();
+    expect(localStorage.getItem('user_email')).toBeNull();
     expect(mockNavigate).toHaveBeenCalledWith('/login');
   });
 
@@ -68,6 +69,7 @@ describe('useLogout', () => {
     });
     expect(localStorage.getItem('token')).toBeNull();
     expect(localStorage.getItem('refresh_token')).toBeNull();
+    expect(localStorage.getItem('user_email')).toBeNull();
   });
 
   it('skips logout API when refresh token missing, but still clears and redirects', async () => {
@@ -82,5 +84,6 @@ describe('useLogout', () => {
     expect(authApi.logout).not.toHaveBeenCalled();
     expect(localStorage.getItem('token')).toBeNull();
     expect(localStorage.getItem('refresh_token')).toBeNull();
+    expect(localStorage.getItem('user_email')).toBeNull();
   });
 });

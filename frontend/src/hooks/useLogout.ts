@@ -15,6 +15,7 @@ export function useLogout() {
     } finally {
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user_email');
       navigate('/login');
     }
   };
