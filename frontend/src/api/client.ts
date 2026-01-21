@@ -56,6 +56,12 @@ export interface RegisterData {
   password: string;
 }
 
+export interface LoginData {
+  email: string;
+  password: string;
+  remember_me?: boolean;
+}
+
 export interface UserData {
   id: number;
   email: string;
@@ -64,13 +70,24 @@ export interface UserData {
 
 export interface LoginResponse {
   access_token: string;
+  refresh_token: string;
   token_type: string;
   user: UserData;
+}
+
+export interface RefreshResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
 }
 
 export const authApi = {
   register: (data: RegisterData) =>
     api.post<ApiResponse<UserData>>('/auth/register', data),
-  login: (data: RegisterData) =>
+  login: (data: LoginData) =>
     api.post<ApiResponse<LoginResponse>>('/auth/login', data),
+  refresh: (refresh_token: string) =>
+    api.post<ApiResponse<RefreshResponse>>('/auth/refresh', { refresh_token }),
+  logout: (refresh_token: string) =>
+    api.post<null>('/auth/logout', { refresh_token }),
 };

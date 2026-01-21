@@ -96,6 +96,35 @@ class AuthRegistrationApiTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 422)
 
+    def test_register_long_password_returns_422(self):
+        response = self.client.post(
+            "/api/auth/register",
+            json={"email": "long@example.com", "password": "a" * 65},
+        )
+
+        self.assertEqual(response.status_code, 422)
+
+    def test_register_normalizes_email(self):
+        response = self.client.post(
+            "/api/auth/register",
+            json={"email": "  User@Example.com  ", "password": "secret123"},
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["data"]["email"], "user@example.com")
+
+    def test_register_duplicate_email_case_insensitive(self):
+        self.client.post(
+            "/api/auth/register",
+            json={"email": "User@Example.com", "password": "secret123"},
+        )
+        response = self.client.post(
+            "/api/auth/register",
+            json={"email": "user@example.com", "password": "secret123"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()

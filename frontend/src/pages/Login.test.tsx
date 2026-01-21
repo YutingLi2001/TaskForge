@@ -33,6 +33,7 @@ describe('Login page', () => {
     vi.mocked(authApi.login).mockResolvedValue({
       data: {
         access_token: 'access-token',
+        refresh_token: 'refresh-token',
         token_type: 'bearer',
         user: { id: 1, email: 'user@example.com', created_at: '2026-01-19T00:00:00Z' },
       },
@@ -50,10 +51,17 @@ describe('Login page', () => {
     fireEvent.change(screen.getByLabelText(/password/i), {
       target: { value: 'secret123' },
     });
+    fireEvent.click(screen.getByLabelText(/remember me/i));
     fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => {
       expect(localStorage.getItem('token')).toBe('access-token');
+    });
+    expect(localStorage.getItem('refresh_token')).toBe('refresh-token');
+    expect(authApi.login).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      password: 'secret123',
+      remember_me: true,
     });
     expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
   });

@@ -63,6 +63,15 @@ class AuthRegistrationTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             UserCreate(email="short@example.com", password="123")
 
+    def test_register_long_password(self):
+        with self.assertRaises(ValidationError):
+            UserCreate(email="long@example.com", password="a" * 65)
+
+    def test_register_normalizes_email(self):
+        payload = UserCreate(email="  User@Example.com  ", password="secret123")
+        response = register(payload, db=self.db)
+        self.assertEqual(response.data.email, "user@example.com")
+
 
 if __name__ == "__main__":
     unittest.main()

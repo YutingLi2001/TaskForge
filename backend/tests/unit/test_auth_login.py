@@ -1,10 +1,11 @@
 import unittest
 
+from fastapi import HTTPException
+from pydantic import ValidationError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-from pydantic import ValidationError
-from fastapi import HTTPException
+from starlette.requests import Request
 
 from backend.app.database import Base
 from backend.app.models.user import User
@@ -37,28 +38,37 @@ class AuthLoginTests(unittest.TestCase):
         self.db.close()
 
     def _create_user(self, email: str, password: str) -> User:
-        user = User(email=email, hashed_password=hash_password(password))
+        user = User(
+            email=email,
+            hashed_password=hash_password(password),
+            is_verified=True,
+            is_active=True,
+        )
         self.db.add(user)
         self.db.commit()
         self.db.refresh(user)
         return user
 
+    def _request(self) -> Request:
+        return Request({"type": "http", "client": ("127.0.0.1", 12345)})
+
     def test_login_success_returns_token(self):
         self._create_user("user@example.com", "secret123")
         payload = LoginRequest(email="user@example.com", password="secret123")
 
-        response = login(payload, db=self.db)
+        response = login(payload, request=self._request(), db=self.db)
 
         self.assertEqual(response.data.user.email, "user@example.com")
         self.assertEqual(response.data.token_type, "bearer")
         self.assertTrue(response.data.access_token)
+        self.assertTrue(response.data.refresh_token)
 
     def test_login_invalid_password(self):
         self._create_user("user@example.com", "secret123")
         payload = LoginRequest(email="user@example.com", password="wrongpass")
 
         with self.assertRaises(HTTPException) as ctx:
-            login(payload, db=self.db)
+            login(payload, request=self._request(), db=self.db)
 
         self.assertEqual(ctx.exception.status_code, 401)
 
@@ -66,7 +76,7 @@ class AuthLoginTests(unittest.TestCase):
         payload = LoginRequest(email="nope@example.com", password="secret123")
 
         with self.assertRaises(HTTPException) as ctx:
-            login(payload, db=self.db)
+            login(payload, request=self._request(), db=self.db)
 
         self.assertEqual(ctx.exception.status_code, 401)
 
@@ -77,6 +87,10 @@ class AuthLoginTests(unittest.TestCase):
     def test_login_short_password(self):
         with self.assertRaises(ValidationError):
             LoginRequest(email="short@example.com", password="123")
+
+    def test_login_long_password(self):
+        with self.assertRaises(ValidationError):
+            LoginRequest(email="long@example.com", password="a" * 65)
 
 
 if __name__ == "__main__":
