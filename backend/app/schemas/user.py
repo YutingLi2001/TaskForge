@@ -18,3 +18,18 @@ class UserResponse(BaseModel):
 
 class UserDataResponse(BaseModel):
     data: UserResponse
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=6)
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserResponse
+
+
+class LoginDataResponse(BaseModel):
+    data: LoginResponse

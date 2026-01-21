@@ -62,7 +62,15 @@ export interface UserData {
   created_at: string;
 }
 
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  user: UserData;
+}
+
 export const authApi = {
   register: (data: RegisterData) =>
     api.post<ApiResponse<UserData>>('/auth/register', data),
+  login: (data: RegisterData) =>
+    api.post<ApiResponse<LoginResponse>>('/auth/login', data),
 };

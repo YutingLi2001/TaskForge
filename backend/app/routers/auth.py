@@ -4,8 +4,15 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models.user import User
-from ..schemas.user import UserCreate, UserDataResponse, UserResponse
-from ..utils.auth import hash_password
+from ..schemas.user import (
+    LoginDataResponse,
+    LoginRequest,
+    LoginResponse,
+    UserCreate,
+    UserDataResponse,
+    UserResponse,
+)
+from ..utils.auth import create_access_token, hash_password, verify_password
 
 router = APIRouter()
 
@@ -37,3 +44,22 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     return UserDataResponse(data=UserResponse.model_validate(new_user))
+
+
+@router.post("/login", response_model=LoginDataResponse)
+def login(credentials: LoginRequest, db: Session = Depends(get_db)):
+    """Authenticate user and return JWT token."""
+    user = db.query(User).filter(User.email == credentials.email).first()
+    if not user or not verify_password(credentials.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+
+    access_token = create_access_token(data={"sub": user.email})
+    response = LoginResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse.model_validate(user),
+    )
+    return LoginDataResponse(data=response)
