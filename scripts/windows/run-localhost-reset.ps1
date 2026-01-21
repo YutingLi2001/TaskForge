@@ -6,15 +6,13 @@ Set-Location $root
 $logDir = Join-Path $root 'logs'
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $ts = Get-Date -Format 'yyyyMMdd-HHmmss'
-$log = Join-Path $logDir "localhost-$ts.log"
+$log = Join-Path $logDir "localhost-reset-$ts.log"
 
-Write-Host "Starting localhost services..."
+Write-Host "Resetting localhost services (will remove DB volume)..."
 
 $docker = Get-Command docker -ErrorAction SilentlyContinue
 if (-not $docker) {
-  Write-Host "Docker not found. Install Docker Desktop or run manually:"
-  Write-Host "Backend: cd backend && python -m uvicorn app.main:app --reload"
-  Write-Host "Frontend: cd frontend && npm install && npm run dev"
+  Write-Host "Docker not found. Install Docker Desktop or run manually."
   "Docker not found." | Out-File -FilePath $log -Encoding ASCII
   Read-Host "Press Enter to close"
   exit 1
@@ -33,14 +31,14 @@ $useComposeV2 = $false
 if ($LASTEXITCODE -eq 0) { $useComposeV2 = $true }
 
 if ($useComposeV2) {
+  Write-Host "Stopping services and removing volumes..."
+  & cmd /c "docker compose down -v >> `"$log`" 2>&1"
   Write-Host "Starting services with docker compose (detached)..."
-  Write-Host "Stopping existing services..."
-  & cmd /c "docker compose down >> `"$log`" 2>&1"
   & cmd /c "docker compose up --build -d >> `"$log`" 2>&1"
 } else {
+  Write-Host "Stopping services and removing volumes..."
+  & cmd /c "docker-compose down -v >> `"$log`" 2>&1"
   Write-Host "Starting services with docker-compose (detached)..."
-  Write-Host "Stopping existing services..."
-  & cmd /c "docker-compose down >> `"$log`" 2>&1"
   & cmd /c "docker-compose up --build -d >> `"$log`" 2>&1"
 }
 
@@ -56,9 +54,8 @@ if ($useComposeV2) {
   & cmd /c "docker-compose ps >> `"$log`" 2>&1"
 }
 
-Write-Host "Services started."
+Write-Host "Services started (DB reset)."
 Write-Host "Frontend: http://localhost:5173/"
 Write-Host "Backend:  http://localhost:8000/api/health"
-Write-Host "Note: If you changed DB schema, run run-localhost-reset.bat to rebuild the DB."
 Write-Host "Log saved to $log"
 Read-Host "Press Enter to close"

@@ -6,6 +6,11 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/taskforge")
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+FRONTEND_URLS = [
+    url.strip()
+    for url in os.getenv("FRONTEND_URLS", FRONTEND_URL).split(",")
+    if url.strip()
+]
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
