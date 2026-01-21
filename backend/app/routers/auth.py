@@ -15,6 +15,8 @@ from ..schemas.user import (
     RefreshResponse,
     UserCreate,
     UserDataResponse,
+    UserPublicDataResponse,
+    UserPublicResponse,
     UserResponse,
 )
 from ..utils.auth import (
@@ -173,7 +175,7 @@ def logout(payload: RefreshRequest, db: Session = Depends(get_db)):
     return None
 
 
-@router.get("/me", response_model=UserDataResponse)
+@router.get("/me", response_model=UserPublicDataResponse)
 def get_me(current_user: User = Depends(get_current_user)):
     """Return the current authenticated user."""
-    return UserDataResponse(data=UserResponse.model_validate(current_user))
+    return UserPublicDataResponse(data=UserPublicResponse.model_validate(current_user))

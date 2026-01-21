@@ -79,6 +79,8 @@ class AuthMeApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         body = response.json()
         self.assertEqual(body["data"]["email"], "user@example.com")
+        self.assertNotIn("is_active", body["data"])
+        self.assertNotIn("is_verified", body["data"])
 
     def test_me_missing_token_returns_401(self):
         response = self.client.get("/api/auth/me")

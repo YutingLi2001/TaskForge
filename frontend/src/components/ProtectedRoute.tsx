@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { authApi } from '../api/client';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -25,8 +27,38 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       return false;
     }
   };
+  const [status, setStatus] = useState<'checking' | 'allowed' | 'denied'>(() => {
+    return !token || !isTokenValid(token) ? 'denied' : 'checking';
+  });
 
-  if (!isTokenValid(token)) {
+  useEffect(() => {
+    if (!token || !isTokenValid(token)) {
+      setStatus('denied');
+      return;
+    }
+    let active = true;
+    authApi.me()
+      .then(() => {
+        if (active) {
+          setStatus('allowed');
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('token');
+        if (active) {
+          setStatus('denied');
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [token]);
+
+  if (status === 'checking') {
+    return null;
+  }
+
+  if (status === 'denied') {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

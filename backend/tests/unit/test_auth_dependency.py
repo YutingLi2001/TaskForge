@@ -35,12 +35,12 @@ class AuthDependencyTests(unittest.TestCase):
     def tearDown(self):
         self.db.close()
 
-    def _create_user(self, email: str, password: str) -> User:
+    def _create_user(self, email: str, password: str, *, is_active: bool = True) -> User:
         user = User(
             email=email,
             hashed_password=hash_password(password),
             is_verified=True,
-            is_active=True,
+            is_active=is_active,
         )
         self.db.add(user)
         self.db.commit()
@@ -67,6 +67,17 @@ class AuthDependencyTests(unittest.TestCase):
             asyncio.run(get_current_user(token=token, db=self.db))
 
         self.assertEqual(ctx.exception.status_code, 401)
+
+    def test_get_current_user_with_inactive_user_raises_403(self):
+        from backend.app.utils.auth import get_current_user
+
+        user = self._create_user("inactive@example.com", "secret123", is_active=False)
+        token = create_access_token({"sub": user.email})
+
+        with self.assertRaises(HTTPException) as ctx:
+            asyncio.run(get_current_user(token=token, db=self.db))
+
+        self.assertEqual(ctx.exception.status_code, 403)
 
 
 if __name__ == "__main__":

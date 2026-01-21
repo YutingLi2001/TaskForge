@@ -1,11 +1,20 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import ProtectedRoute from './ProtectedRoute';
 
+vi.mock('../api/client', () => ({
+  authApi: {
+    me: vi.fn(),
+  },
+}));
+
+import { authApi } from '../api/client';
+
 describe('ProtectedRoute', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.mocked(authApi.me).mockReset();
   });
 
   const makeToken = (expOffsetSeconds: number) => {
@@ -38,8 +47,9 @@ describe('ProtectedRoute', () => {
     expect(screen.getByText('Login')).toBeInTheDocument();
   });
 
-  it('renders children when token exists', () => {
+  it('renders children when token exists', async () => {
     localStorage.setItem('token', makeToken(60));
+    vi.mocked(authApi.me).mockResolvedValue({ data: {} });
 
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
@@ -57,10 +67,10 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(await screen.findByText('Dashboard')).toBeInTheDocument();
   });
 
-  it('redirects to login when token is expired', () => {
+  it('redirects to login when token is expired', async () => {
     localStorage.setItem('token', makeToken(-60));
 
     render(
@@ -79,10 +89,10 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Login')).toBeInTheDocument();
+    expect(await screen.findByText('Login')).toBeInTheDocument();
   });
 
-  it('redirects to login when token format is invalid', () => {
+  it('redirects to login when token format is invalid', async () => {
     localStorage.setItem('token', 'invalid-token');
 
     render(
@@ -101,6 +111,29 @@ describe('ProtectedRoute', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Login')).toBeInTheDocument();
+    expect(await screen.findByText('Login')).toBeInTheDocument();
+  });
+
+  it('redirects to login when server rejects token', async () => {
+    localStorage.setItem('token', makeToken(60));
+    vi.mocked(authApi.me).mockRejectedValue(new Error('Invalid token'));
+
+    render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <Routes>
+          <Route path="/login" element={<div>Login</div>} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <div>Dashboard</div>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Login')).toBeInTheDocument();
   });
 });

@@ -63,3 +63,16 @@ class RefreshResponse(BaseModel):
 
 class RefreshDataResponse(BaseModel):
     data: RefreshResponse
+
+
+class UserPublicResponse(BaseModel):
+    id: int
+    email: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserPublicDataResponse(BaseModel):
+    data: UserPublicResponse

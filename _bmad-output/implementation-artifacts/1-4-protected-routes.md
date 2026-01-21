@@ -1,6 +1,6 @@
 # Story 1.4: Protected Routes
 
-Status: review
+Status: done
 
 ## Story
 
@@ -233,27 +233,28 @@ Codex (GPT-5)
 ### Completion Notes List
 
 - Added backend auth helpers (`decode_access_token`, `get_current_user`) and `/api/auth/me`.
-- Implemented ProtectedRoute/PublicRoute with JWT expiry/format checks.
+- Implemented ProtectedRoute/PublicRoute with JWT expiry/format checks and server validation via `/api/auth/me`.
 - Wrapped login/register/dashboard routes with public/protected guards.
+- Adjusted `/api/auth/me` response to limit fields and return 403 for inactive users.
 - Tests: `scripts/windows/run-frontend-tests.ps1` (pass)
 - Tests: `scripts/windows/run-backend-tests.ps1` (pass; warnings in log: FastAPI on_event deprecation, sqlite connection not closed)
 
 ### File List
 
-**To Create:**
+- backend/app/routers/auth.py
+- backend/app/schemas/user.py
+- backend/app/utils/auth.py
 - backend/tests/api/test_auth_me_api.py
 - backend/tests/unit/test_auth_dependency.py
+- frontend/src/App.tsx
 - frontend/src/AppRouting.test.tsx
+- frontend/src/api/client.ts
 - frontend/src/components/ProtectedRoute.tsx
 - frontend/src/components/ProtectedRoute.test.tsx
 - frontend/src/components/PublicRoute.tsx
 - frontend/src/components/PublicRoute.test.tsx
 
-**To Modify:**
-- backend/app/utils/auth.py
-- backend/app/routers/auth.py
-- frontend/src/App.tsx
-
 ### Change Log
 
 - 2026-01-21: Added auth dependency, /me endpoint, protected/public routing, and tests.
+- 2026-01-21: Code review fixes: validate tokens via `/api/auth/me`, limit /me response, inactive users return 403.

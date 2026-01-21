@@ -89,10 +89,15 @@ async def get_current_user(
     payload = decode_access_token(token)
     email = payload.get("sub")
     user = db.query(User).filter(User.email == email).first()
-    if not user or not user.is_active:
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
+        )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is disabled.",
         )
     return user

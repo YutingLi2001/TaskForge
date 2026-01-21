@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { authApi } from '../api/client';
 
 interface PublicRouteProps {
   children: React.ReactNode;
@@ -24,8 +26,38 @@ export default function PublicRoute({ children }: PublicRouteProps) {
       return false;
     }
   };
+  const [status, setStatus] = useState<'checking' | 'guest' | 'authed'>(() => {
+    return !token || !isTokenValid(token) ? 'guest' : 'checking';
+  });
 
-  if (isTokenValid(token)) {
+  useEffect(() => {
+    if (!token || !isTokenValid(token)) {
+      setStatus('guest');
+      return;
+    }
+    let active = true;
+    authApi.me()
+      .then(() => {
+        if (active) {
+          setStatus('authed');
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('token');
+        if (active) {
+          setStatus('guest');
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [token]);
+
+  if (status === 'checking') {
+    return null;
+  }
+
+  if (status === 'authed') {
     return <Navigate to="/dashboard" replace />;
   }
 
