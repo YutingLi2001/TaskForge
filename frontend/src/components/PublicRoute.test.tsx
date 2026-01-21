@@ -12,7 +12,10 @@ describe('PublicRoute', () => {
   const makeToken = (expOffsetSeconds: number) => {
     const payload = btoa(
       JSON.stringify({ exp: Math.floor(Date.now() / 1000) + expOffsetSeconds })
-    );
+    )
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/g, '');
     return ['header', payload, 'signature'].join('.');
   };
 
