@@ -1,2 +1,4 @@
 # Logs
 logs/
+**/__pycache__/
+.mcp.json
