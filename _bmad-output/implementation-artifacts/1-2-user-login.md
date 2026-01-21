@@ -47,6 +47,8 @@ So that **I can access my account and use the application**.
   - [x] Test login success returns 200 + token
   - [x] Test invalid credentials return 401
   - [x] Test invalid email returns 422
+  - [x] Test Authorization header includes stored token
+  - [x] Test login UI shows error on failure
 
 ## Dev Notes
 
@@ -140,7 +142,7 @@ Codex (GPT-5)
 - Added JWT access token creation with configurable expiry minutes
 - Implemented login endpoint with validation and 401 errors
 - Built Login UI and dashboard redirect
-- Added API client login support and tests for login
+- Added API client login support and frontend tests
 
 ### File List
 
@@ -148,6 +150,9 @@ Codex (GPT-5)
 - backend/tests/test_auth_login.py
 - backend/tests/test_auth_login_api.py
 - frontend/src/pages/Login.tsx
+- frontend/src/api/client.test.ts
+- frontend/src/pages/Login.test.tsx
+- frontend/src/setupTests.ts
 
 **Modified:**
 - backend/app/utils/auth.py
@@ -155,4 +160,6 @@ Codex (GPT-5)
 - backend/app/routers/auth.py
 - frontend/src/api/client.ts
 - frontend/src/App.tsx
+- frontend/package.json
+- frontend/vite.config.ts
 - .env.example
