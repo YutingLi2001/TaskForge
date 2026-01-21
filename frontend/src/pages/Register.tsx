@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authApi } from '../api/client';
 
@@ -58,7 +58,7 @@ export default function Register() {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="At least 6 characters"
+              placeholder="you@example.com"
             />
           </div>
 
@@ -74,7 +74,7 @@ export default function Register() {
               required
               minLength={6}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="••••••••"
+              placeholder="At least 6 characters"
             />
           </div>
 
@@ -97,3 +97,4 @@ export default function Register() {
     </div>
   );
 }
+
