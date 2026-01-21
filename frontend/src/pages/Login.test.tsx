@@ -58,6 +58,7 @@ describe('Login page', () => {
       expect(localStorage.getItem('token')).toBe('access-token');
     });
     expect(localStorage.getItem('refresh_token')).toBe('refresh-token');
+    expect(localStorage.getItem('user_email')).toBe('user@example.com');
     expect(authApi.login).toHaveBeenCalledWith({
       email: 'user@example.com',
       password: 'secret123',

@@ -23,6 +23,7 @@ export default function Login() {
       });
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('refresh_token', response.data.refresh_token);
+      localStorage.setItem('user_email', response.data.user.email);
       navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
