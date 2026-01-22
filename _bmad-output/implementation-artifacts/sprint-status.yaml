@@ -43,7 +43,7 @@ development_status:
 
   # Epic 2: Project Management
   epic-2: in-progress
-  2-1-project-list-create: ready-for-dev
+  2-1-project-list-create: review
   2-2-view-project-details: backlog
   2-3-edit-project: backlog
   2-4-delete-project: backlog

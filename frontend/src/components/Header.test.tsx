@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import Dashboard from '../pages/Dashboard';
 
 const mockNavigate = vi.fn();
@@ -23,7 +24,11 @@ vi.mock('../api/client', () => ({
 describe('Header', () => {
   it('shows the logout button on the dashboard', () => {
     localStorage.setItem('token', 'access-token');
-    render(<Dashboard />);
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
     expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
   });
 });

@@ -1,6 +1,6 @@
 # Story 2.1: Project List & Create
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -19,61 +19,61 @@ So that **I can organize my work**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Project Database Model** (AC: 1, 2, 3)
-  - [ ] Create `backend/app/models/project.py` with Project model
-  - [ ] Add fields: id, name, user_id (FK), created_at, updated_at
-  - [ ] Add relationship to User model
-  - [ ] Export from `backend/app/models/__init__.py`
-  - [ ] Create projects table (manual migration or auto-create)
+- [x] **Task 1: Project Database Model** (AC: 1, 2, 3)
+  - [x] Create `backend/app/models/project.py` with Project model
+  - [x] Add fields: id, name, user_id (FK), created_at, updated_at
+  - [x] Add relationship to User model
+  - [x] Export from `backend/app/models/__init__.py`
+  - [x] Create projects table (manual migration or auto-create)
 
-- [ ] **Task 2: Project Schemas** (AC: 2, 5)
-  - [ ] Create `backend/app/schemas/project.py`
-  - [ ] Add `ProjectCreate` schema (name: str, min_length=1)
-  - [ ] Add `ProjectResponse` schema (id, name, user_id, created_at, updated_at)
-  - [ ] Add `ProjectListResponse` schema for list endpoint
-  - [ ] Export from `backend/app/schemas/__init__.py`
+- [x] **Task 2: Project Schemas** (AC: 2, 5)
+  - [x] Create `backend/app/schemas/project.py`
+  - [x] Add `ProjectCreate` schema (name: str, min_length=1)
+  - [x] Add `ProjectResponse` schema (id, name, user_id, created_at, updated_at)
+  - [x] Add `ProjectListResponse` schema for list endpoint
+  - [x] Export from `backend/app/schemas/__init__.py`
 
-- [ ] **Task 3: Projects API Router** (AC: 1, 2, 3, 4)
-  - [ ] Create `backend/app/routers/projects.py`
-  - [ ] Implement `GET /api/projects` - list current user's projects
-  - [ ] Implement `POST /api/projects` - create new project for current user
-  - [ ] Use `get_current_user` dependency for authentication
-  - [ ] Filter projects by current user's id
-  - [ ] Register router in `backend/app/main.py`
+- [x] **Task 3: Projects API Router** (AC: 1, 2, 3, 4)
+  - [x] Create `backend/app/routers/projects.py`
+  - [x] Implement `GET /api/projects` - list current user's projects
+  - [x] Implement `POST /api/projects` - create new project for current user
+  - [x] Use `get_current_user` dependency for authentication
+  - [x] Filter projects by current user's id
+  - [x] Register router in `backend/app/main.py`
 
-- [ ] **Task 4: Backend Testing** (AC: 1, 2, 3, 4, 5)
-  - [ ] Create `backend/tests/api/test_projects_api.py`
-  - [ ] Test: GET /projects returns empty list for new user
-  - [ ] Test: POST /projects creates project and returns it
-  - [ ] Test: GET /projects returns only user's own projects
-  - [ ] Test: POST /projects with empty name returns 422
-  - [ ] Test: Unauthenticated requests return 401
+- [x] **Task 4: Backend Testing** (AC: 1, 2, 3, 4, 5)
+  - [x] Create `backend/tests/api/test_projects_api.py`
+  - [x] Test: GET /projects returns empty list for new user
+  - [x] Test: POST /projects creates project and returns it
+  - [x] Test: GET /projects returns only user's own projects
+  - [x] Test: POST /projects with empty name returns 422
+  - [x] Test: Unauthenticated requests return 401
 
-- [ ] **Task 5: Frontend API Client** (AC: 1, 2)
-  - [ ] Add `ProjectData` interface to `frontend/src/api/client.ts`
-  - [ ] Add `projectsApi` object with `list()` and `create()` methods
-  - [ ] Follow existing authApi pattern
+- [x] **Task 5: Frontend API Client** (AC: 1, 2)
+  - [x] Add `ProjectData` interface to `frontend/src/api/client.ts`
+  - [x] Add `projectsApi` object with `list()` and `create()` methods
+  - [x] Follow existing authApi pattern
 
-- [ ] **Task 6: Projects Page UI** (AC: 1, 2, 5, 6)
-  - [ ] Create `frontend/src/pages/Projects.tsx`
-  - [ ] Display list of projects (name, created date)
-  - [ ] Add "Create Project" form with name input
-  - [ ] Show loading state while fetching
-  - [ ] Show empty state when no projects exist
-  - [ ] Show validation error for empty name
-  - [ ] Style with Tailwind CSS matching existing design
+- [x] **Task 6: Projects Page UI** (AC: 1, 2, 5, 6)
+  - [x] Create `frontend/src/pages/Projects.tsx`
+  - [x] Display list of projects (name, created date)
+  - [x] Add "Create Project" form with name input
+  - [x] Show loading state while fetching
+  - [x] Show empty state when no projects exist
+  - [x] Show validation error for empty name
+  - [x] Style with Tailwind CSS matching existing design
 
-- [ ] **Task 7: Update App Routing** (AC: 1, 4)
-  - [ ] Add `/projects` route to `frontend/src/App.tsx`
-  - [ ] Wrap with ProtectedRoute
-  - [ ] Update Dashboard to link to Projects page (or make Projects the new dashboard)
+- [x] **Task 7: Update App Routing** (AC: 1, 4)
+  - [x] Add `/projects` route to `frontend/src/App.tsx`
+  - [x] Wrap with ProtectedRoute
+  - [x] Update Dashboard to link to Projects page (or make Projects the new dashboard)
 
-- [ ] **Task 8: Frontend Testing** (AC: 1, 2, 5, 6)
-  - [ ] Create `frontend/src/pages/Projects.test.tsx`
-  - [ ] Test: Projects page renders project list
-  - [ ] Test: Create form submits and adds project to list
-  - [ ] Test: Empty name shows validation error
-  - [ ] Test: Empty state displays when no projects
+- [x] **Task 8: Frontend Testing** (AC: 1, 2, 5, 6)
+  - [x] Create `frontend/src/pages/Projects.test.tsx`
+  - [x] Test: Projects page renders project list
+  - [x] Test: Create form submits and adds project to list
+  - [x] Test: Empty name shows validation error
+  - [x] Test: Empty state displays when no projects
 
 ## Dev Notes
 
@@ -269,26 +269,36 @@ export const projectsApi = {
 
 ### Agent Model Used
 
-(To be filled by dev agent)
+GPT-5 (Codex CLI)
 
 ### Completion Notes List
 
-(To be filled by dev agent)
+- Added Project model, schemas, and projects router with authenticated list/create endpoints.
+- Implemented Projects page UI, API client, and routing from Dashboard.
+- Added backend API coverage plus frontend Projects page tests and updated Dashboard tests.
+- Tests: `python -m unittest backend.tests.unit.test_project_model`, `python -m unittest backend.tests.unit.test_project_schema`, `python -m unittest backend.tests.unit.test_projects_router`, `python -m unittest backend.tests.api.test_projects_api`, `npm test` (frontend), `scripts/windows/run-backend-tests.bat`, `scripts/windows/run-frontend-tests.bat`.
 
 ### File List
 
-**To Create:**
+**Created:**
 - backend/app/models/project.py
-- backend/app/schemas/project.py
 - backend/app/routers/projects.py
+- backend/app/schemas/project.py
 - backend/tests/api/test_projects_api.py
-- frontend/src/pages/Projects.tsx
+- backend/tests/unit/test_project_model.py
+- backend/tests/unit/test_project_schema.py
+- backend/tests/unit/test_projects_router.py
 - frontend/src/pages/Projects.test.tsx
+- frontend/src/pages/Projects.tsx
 
-**To Modify:**
-- backend/app/models/__init__.py (export Project)
-- backend/app/schemas/__init__.py (export project schemas)
-- backend/app/main.py (register projects router)
-- backend/app/models/user.py (add projects relationship - optional)
-- frontend/src/api/client.ts (add projectsApi)
-- frontend/src/App.tsx (add /projects route)
+**Modified:**
+- backend/app/main.py
+- backend/app/models/__init__.py
+- backend/app/models/user.py
+- backend/app/routers/__init__.py
+- backend/app/schemas/__init__.py
+- frontend/src/App.tsx
+- frontend/src/api/client.ts
+- frontend/src/components/Header.test.tsx
+- frontend/src/pages/Dashboard.test.tsx
+- frontend/src/pages/Dashboard.tsx

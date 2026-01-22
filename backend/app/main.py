@@ -5,7 +5,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import OperationalError
 
-from .routers import auth_router
+from .routers import auth_router, projects_router
+from .models import Project
 from . import database as db
 from .config import FRONTEND_URLS
 
@@ -28,6 +29,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(projects_router, prefix="/api", tags=["projects"])
 
 def init_db(max_attempts: int = 10, delay_seconds: float = 1.0) -> None:
     """Initialize database tables with a simple retry for container startup."""

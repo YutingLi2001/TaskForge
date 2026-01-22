@@ -81,6 +81,18 @@ export interface RefreshResponse {
   token_type: string;
 }
 
+export interface ProjectData {
+  id: number;
+  name: string;
+  user_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateProjectData {
+  name: string;
+}
+
 export const authApi = {
   register: (data: RegisterData) =>
     api.post<ApiResponse<UserData>>('/auth/register', data),
@@ -91,4 +103,10 @@ export const authApi = {
   me: () => api.get<ApiResponse<UserData>>('/auth/me'),
   logout: (refresh_token: string) =>
     api.post<null>('/auth/logout', { refresh_token }),
+};
+
+export const projectsApi = {
+  list: () => api.get<ApiResponse<ProjectData[]>>('/projects'),
+  create: (data: CreateProjectData) =>
+    api.post<ApiResponse<ProjectData>>('/projects', data),
 };
