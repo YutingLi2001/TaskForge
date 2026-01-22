@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy.orm import relationship
 
 from ..database import Base
 
@@ -17,3 +18,5 @@ class User(Base):
     locked_until = Column(DateTime, nullable=True)
     refresh_token_hash = Column(String, nullable=True)
     refresh_token_expires_at = Column(DateTime, nullable=True)
+
+    projects = relationship("Project", back_populates="owner", cascade="all, delete-orphan")

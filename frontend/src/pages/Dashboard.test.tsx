@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import Dashboard from './Dashboard';
 
 const mockNavigate = vi.fn();
@@ -27,7 +28,11 @@ describe('Dashboard', () => {
   });
 
   it('redirects to login when token is missing', async () => {
-    render(<Dashboard />);
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/login');
@@ -36,7 +41,11 @@ describe('Dashboard', () => {
 
   it('does not redirect when token exists', async () => {
     localStorage.setItem('token', 'access-token');
-    render(<Dashboard />);
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(mockNavigate).not.toHaveBeenCalled();

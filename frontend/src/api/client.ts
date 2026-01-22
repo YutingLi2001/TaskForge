@@ -9,6 +9,18 @@ interface ApiError {
   detail: string;
 }
 
+export class ApiRequestError extends Error {
+  status: number;
+  detail?: string;
+
+  constructor(status: number, detail?: string) {
+    super(detail || 'An error occurred');
+    this.name = 'ApiRequestError';
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
 async function request<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -27,8 +39,16 @@ async function request<T>(
   });
 
   if (!response.ok) {
-    const error: ApiError = await response.json();
-    throw new Error(error.detail || 'An error occurred');
+    let detail: string | undefined;
+    try {
+      const error: ApiError = await response.json();
+      if (error && typeof error.detail === 'string') {
+        detail = error.detail;
+      }
+    } catch {
+      // Ignore JSON parsing errors for non-JSON responses.
+    }
+    throw new ApiRequestError(response.status, detail);
   }
 
   return response.json();
@@ -81,6 +101,18 @@ export interface RefreshResponse {
   token_type: string;
 }
 
+export interface ProjectData {
+  id: number;
+  name: string;
+  user_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateProjectData {
+  name: string;
+}
+
 export const authApi = {
   register: (data: RegisterData) =>
     api.post<ApiResponse<UserData>>('/auth/register', data),
@@ -91,4 +123,10 @@ export const authApi = {
   me: () => api.get<ApiResponse<UserData>>('/auth/me'),
   logout: (refresh_token: string) =>
     api.post<null>('/auth/logout', { refresh_token }),
+};
+
+export const projectsApi = {
+  list: () => api.get<ApiResponse<ProjectData[]>>('/projects'),
+  create: (data: CreateProjectData) =>
+    api.post<ApiResponse<ProjectData>>('/projects', data),
 };

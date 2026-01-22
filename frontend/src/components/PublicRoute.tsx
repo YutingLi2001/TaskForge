@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { authApi } from '../api/client';
+import { ApiRequestError, authApi } from '../api/client';
 
 interface PublicRouteProps {
   children: React.ReactNode;
@@ -43,8 +43,9 @@ export default function PublicRoute({ children }: PublicRouteProps) {
         }
       })
       .catch((err: unknown) => {
-        const message = err instanceof Error ? err.message : '';
-        const isAuthError = message.toLowerCase().includes('401') || message.toLowerCase().includes('403');
+        const isAuthError =
+          err instanceof ApiRequestError &&
+          (err.status === 401 || err.status === 403);
         if (isAuthError) {
           localStorage.removeItem('token');
         }

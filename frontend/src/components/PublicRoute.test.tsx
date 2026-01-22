@@ -4,13 +4,19 @@ import { render, screen } from '@testing-library/react';
 import PublicRoute from './PublicRoute';
 import Login from '../pages/Login';
 
-vi.mock('../api/client', () => ({
-  authApi: {
-    me: vi.fn(),
-  },
-}));
+vi.mock('../api/client', async () => {
+  const actual = await vi.importActual<typeof import('../api/client')>(
+    '../api/client'
+  );
+  return {
+    ...actual,
+    authApi: {
+      me: vi.fn(),
+    },
+  };
+});
 
-import { authApi } from '../api/client';
+import { ApiRequestError, authApi } from '../api/client';
 
 describe('PublicRoute', () => {
   beforeEach(() => {
@@ -87,7 +93,7 @@ describe('PublicRoute', () => {
 
   it('keeps unauthenticated users on login when token is rejected', async () => {
     localStorage.setItem('token', makeToken(60));
-    vi.mocked(authApi.me).mockRejectedValue(new Error('401 Unauthorized'));
+    vi.mocked(authApi.me).mockRejectedValue(new ApiRequestError(401, 'Not authenticated'));
 
     render(
       <MemoryRouter initialEntries={['/login']}>
@@ -107,7 +113,7 @@ describe('PublicRoute', () => {
 
   it('redirects authenticated users when server error is transient', async () => {
     localStorage.setItem('token', makeToken(60));
-    vi.mocked(authApi.me).mockRejectedValue(new Error('500 Server error'));
+    vi.mocked(authApi.me).mockRejectedValue(new ApiRequestError(500, 'Server error'));
 
     render(
       <MemoryRouter initialEntries={['/login']}>

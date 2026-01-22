@@ -39,11 +39,11 @@ development_status:
   1-2-user-login: done
   1-3-user-logout: done
   1-4-protected-routes: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   # Epic 2: Project Management
-  epic-2: backlog
-  2-1-project-list-create: backlog
+  epic-2: in-progress
+  2-1-project-list-create: done
   2-2-view-project-details: backlog
   2-3-edit-project: backlog
   2-4-delete-project: backlog
