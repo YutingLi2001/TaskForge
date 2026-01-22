@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import Header from '../components/Header';
-import { projectsApi } from '../api/client';
+import { ApiRequestError, projectsApi } from '../api/client';
 import type { ProjectData } from '../api/client';
 import { useLogout } from '../hooks/useLogout';
 
@@ -8,8 +8,7 @@ export default function Projects() {
   const { logout } = useLogout();
   const userEmail = localStorage.getItem('user_email');
   const handleAuthError = (err: unknown) => {
-    const message = err instanceof Error ? err.message : '';
-    if (message.toLowerCase().includes('401') || message.toLowerCase().includes('403')) {
+    if (err instanceof ApiRequestError && (err.status === 401 || err.status === 403)) {
       logout();
       return true;
     }

@@ -9,6 +9,18 @@ interface ApiError {
   detail: string;
 }
 
+export class ApiRequestError extends Error {
+  status: number;
+  detail?: string;
+
+  constructor(status: number, detail?: string) {
+    super(detail || 'An error occurred');
+    this.name = 'ApiRequestError';
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
 async function request<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -27,8 +39,16 @@ async function request<T>(
   });
 
   if (!response.ok) {
-    const error: ApiError = await response.json();
-    throw new Error(error.detail || 'An error occurred');
+    let detail: string | undefined;
+    try {
+      const error: ApiError = await response.json();
+      if (error && typeof error.detail === 'string') {
+        detail = error.detail;
+      }
+    } catch {
+      // Ignore JSON parsing errors for non-JSON responses.
+    }
+    throw new ApiRequestError(response.status, detail);
   }
 
   return response.json();

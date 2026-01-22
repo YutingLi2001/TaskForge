@@ -278,7 +278,8 @@ GPT-5 (Codex CLI)
 - Added backend API coverage plus frontend Projects page tests and updated Dashboard tests.
 - Hardened project name validation against whitespace-only values and added coverage.
 - Redirects unauthorized project list/create responses via logout handler.
-- Projects endpoints use async handlers with threadpool for DB I/O.
+- Projects endpoints avoid cross-thread DB sessions for safety.
+- Standardized auth error handling on status codes in auth routes and Projects UI.
 - Tests: `python -m unittest backend.tests.unit.test_project_model`, `python -m unittest backend.tests.unit.test_project_schema`, `python -m unittest backend.tests.unit.test_projects_router`, `python -m unittest backend.tests.api.test_projects_api`, `npm test` (frontend), `scripts/windows/run-backend-tests.bat`, `scripts/windows/run-frontend-tests.bat`.
   - Additional: `python -m unittest backend.tests.unit.test_project_schema` (post-review fix).
 
@@ -306,6 +307,10 @@ GPT-5 (Codex CLI)
 - backend/tests/unit/test_project_schema.py
 - frontend/src/App.tsx
 - frontend/src/api/client.ts
+- frontend/src/components/ProtectedRoute.tsx
+- frontend/src/components/PublicRoute.tsx
+- frontend/src/components/ProtectedRoute.test.tsx
+- frontend/src/components/PublicRoute.test.tsx
 - frontend/src/components/Header.test.tsx
 - frontend/src/pages/Dashboard.test.tsx
 - frontend/src/pages/Dashboard.tsx

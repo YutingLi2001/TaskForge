@@ -2,12 +2,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import Projects from './Projects';
 
-vi.mock('../api/client', () => ({
-  projectsApi: {
-    list: vi.fn(),
-    create: vi.fn(),
-  },
-}));
+vi.mock('../api/client', async () => {
+  const actual = await vi.importActual<typeof import('../api/client')>(
+    '../api/client'
+  );
+  return {
+    ...actual,
+    projectsApi: {
+      list: vi.fn(),
+      create: vi.fn(),
+    },
+  };
+});
 
 const mockLogout = vi.fn();
 
@@ -15,7 +21,7 @@ vi.mock('../hooks/useLogout', () => ({
   useLogout: () => ({ logout: mockLogout }),
 }));
 
-import { projectsApi } from '../api/client';
+import { ApiRequestError, projectsApi } from '../api/client';
 
 describe('Projects page', () => {
   beforeEach(() => {
@@ -93,7 +99,7 @@ describe('Projects page', () => {
   });
 
   it('logs out on unauthorized list response', async () => {
-    vi.mocked(projectsApi.list).mockRejectedValue(new Error('401 Unauthorized'));
+    vi.mocked(projectsApi.list).mockRejectedValue(new ApiRequestError(401, 'Not authenticated'));
 
     render(<Projects />);
 
@@ -104,7 +110,7 @@ describe('Projects page', () => {
 
   it('logs out on unauthorized create response', async () => {
     vi.mocked(projectsApi.list).mockResolvedValue({ data: [] });
-    vi.mocked(projectsApi.create).mockRejectedValue(new Error('403 Forbidden'));
+    vi.mocked(projectsApi.create).mockRejectedValue(new ApiRequestError(403, 'Forbidden'));
 
     render(<Projects />);
 
