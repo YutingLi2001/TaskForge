@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import Header from '../components/Header';
+import { Link } from 'react-router-dom';
 import { ApiRequestError, projectsApi } from '../api/client';
 import type { ProjectData } from '../api/client';
 import { useLogout } from '../hooks/useLogout';
@@ -125,21 +126,23 @@ export default function Projects() {
             ) : (
               <ul className="space-y-3">
                 {projects.map((project) => (
-                  <li
-                    key={project.id}
-                    className="rounded-md border border-gray-200 px-4 py-3"
-                  >
-                    <p className="text-sm font-semibold text-gray-900">
-                      {project.name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Created{' '}
-                      {new Date(project.created_at).toLocaleDateString(undefined, {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </p>
+                  <li key={project.id}>
+                    <Link
+                      to={`/projects/${project.id}`}
+                      className="block rounded-md border border-gray-200 px-4 py-3 transition-colors hover:bg-gray-50"
+                    >
+                      <p className="text-sm font-semibold text-gray-900">
+                        {project.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Created{' '}
+                        {new Date(project.created_at).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </p>
+                    </Link>
                   </li>
                 ))}
               </ul>

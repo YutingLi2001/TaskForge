@@ -1,6 +1,6 @@
 # Story 2.2: View Project Details
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -19,53 +19,53 @@ So that **I can see its information and tasks**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Backend GET Project Endpoint** (AC: 2, 3, 4, 5)
-  - [ ] Add `GET /api/projects/{project_id}` endpoint to `backend/app/routers/projects.py`
-  - [ ] Use `get_current_user` dependency for authentication
-  - [ ] Query project by ID
-  - [ ] Return 404 if project not found
-  - [ ] Return 403 if project.user_id != current_user.id
-  - [ ] Return project data with 200 on success
+- [x] **Task 1: Backend GET Project Endpoint** (AC: 2, 3, 4, 5)
+  - [x] Add `GET /api/projects/{project_id}` endpoint to `backend/app/routers/projects.py`
+  - [x] Use `get_current_user` dependency for authentication
+  - [x] Query project by ID
+  - [x] Return 404 if project not found
+  - [x] Return 403 if project.user_id != current_user.id
+  - [x] Return project data with 200 on success
 
-- [ ] **Task 2: Backend Testing** (AC: 2, 3, 4, 5)
-  - [ ] Add tests to `backend/tests/api/test_projects_api.py`
-  - [ ] Test: GET /projects/{id} returns project data for owner
-  - [ ] Test: GET /projects/{id} returns 404 for non-existent project
-  - [ ] Test: GET /projects/{id} returns 403 for non-owner
-  - [ ] Test: GET /projects/{id} returns 401 for unauthenticated request
+- [x] **Task 2: Backend Testing** (AC: 2, 3, 4, 5)
+  - [x] Add tests to `backend/tests/api/test_projects_api.py`
+  - [x] Test: GET /projects/{id} returns project data for owner
+  - [x] Test: GET /projects/{id} returns 404 for non-existent project
+  - [x] Test: GET /projects/{id} returns 403 for non-owner
+  - [x] Test: GET /projects/{id} returns 401 for unauthenticated request
 
-- [ ] **Task 3: Frontend API Client** (AC: 2)
-  - [ ] Add `get(id: number)` method to `projectsApi` in `frontend/src/api/client.ts`
-  - [ ] Returns `ApiResponse<ProjectData>`
+- [x] **Task 3: Frontend API Client** (AC: 2)
+  - [x] Add `get(id: number)` method to `projectsApi` in `frontend/src/api/client.ts`
+  - [x] Returns `ApiResponse<ProjectData>`
 
-- [ ] **Task 4: Project Detail Page** (AC: 1, 2, 6)
-  - [ ] Create `frontend/src/pages/ProjectDetail.tsx`
-  - [ ] Fetch project data on mount using project ID from URL params
-  - [ ] Display project name, created date, updated date
-  - [ ] Show loading state while fetching
-  - [ ] Show error state on fetch failure
-  - [ ] Add "Back to Projects" link
-  - [ ] Handle 403/404 errors gracefully (show message, link back)
-  - [ ] Style with Tailwind CSS matching existing design
+- [x] **Task 4: Project Detail Page** (AC: 1, 2, 6)
+  - [x] Create `frontend/src/pages/ProjectDetail.tsx`
+  - [x] Fetch project data on mount using project ID from URL params
+  - [x] Display project name, created date, updated date
+  - [x] Show loading state while fetching
+  - [x] Show error state on fetch failure
+  - [x] Add "Back to Projects" link
+  - [x] Handle 403/404 errors gracefully (show message, link back)
+  - [x] Style with Tailwind CSS matching existing design
 
-- [ ] **Task 5: Make Project List Clickable** (AC: 1)
-  - [ ] Update `frontend/src/pages/Projects.tsx`
-  - [ ] Wrap each project item with `Link` to `/projects/{id}`
-  - [ ] Add hover state styling for clickable items
+- [x] **Task 5: Make Project List Clickable** (AC: 1)
+  - [x] Update `frontend/src/pages/Projects.tsx`
+  - [x] Wrap each project item with `Link` to `/projects/{id}`
+  - [x] Add hover state styling for clickable items
 
-- [ ] **Task 6: Update App Routing** (AC: 1, 5)
-  - [ ] Add `/projects/:id` route to `frontend/src/App.tsx`
-  - [ ] Wrap with ProtectedRoute
-  - [ ] Import and render ProjectDetail component
+- [x] **Task 6: Update App Routing** (AC: 1, 5)
+  - [x] Add `/projects/:id` route to `frontend/src/App.tsx`
+  - [x] Wrap with ProtectedRoute
+  - [x] Import and render ProjectDetail component
 
-- [ ] **Task 7: Frontend Testing** (AC: 1, 2, 3, 4, 6)
-  - [ ] Create `frontend/src/pages/ProjectDetail.test.tsx`
-  - [ ] Test: ProjectDetail renders project data
-  - [ ] Test: ProjectDetail shows loading state
-  - [ ] Test: ProjectDetail shows error for 404
-  - [ ] Test: ProjectDetail shows error for 403
-  - [ ] Test: Back link navigates to /projects
-  - [ ] Update `frontend/src/pages/Projects.test.tsx` if needed for clickable items
+- [x] **Task 7: Frontend Testing** (AC: 1, 2, 3, 4, 6)
+  - [x] Create `frontend/src/pages/ProjectDetail.test.tsx`
+  - [x] Test: ProjectDetail renders project data
+  - [x] Test: ProjectDetail shows loading state
+  - [x] Test: ProjectDetail shows error for 404
+  - [x] Test: ProjectDetail shows error for 403
+  - [x] Test: Back link navigates to /projects
+  - [x] Update `frontend/src/pages/Projects.test.tsx` if needed for clickable items
 
 ## Dev Notes
 
@@ -275,20 +275,42 @@ import { Link } from 'react-router-dom';
 
 ### Agent Model Used
 
-(To be filled by implementing agent)
+GPT-5 (Codex CLI)
 
 ### Implementation Plan
 
-(To be filled by implementing agent)
+- Add GET /api/projects/{id} with ownership checks and proper 401/403/404 handling.
+- Expand projects API tests for owner access, forbidden, not found, and unauthenticated cases.
+- Extend frontend projectsApi with get(id) and add ProjectDetail page with error states and back link.
+- Make project list items link to detail view and add /projects/:id route.
+- Add frontend tests for ProjectDetail and clickable list behavior.
 
 ### Completion Notes List
 
-(To be filled by implementing agent)
+- Implemented GET /api/projects/{id} with 404/403 handling and owner validation.
+- Added backend tests for project detail access (owner, 403, 404, 401).
+- Added ProjectDetail page with loading/error states and back link.
+- Made project list items link to detail view and added /projects/:id route.
+- Added ProjectDetail tests and updated Projects tests for links.
+- Tests: `python -m unittest backend.tests.api.test_projects_api`, `npm test`, `scripts/windows/run-backend-tests.bat`, `scripts/windows/run-frontend-tests.bat`.
 
 ### File List
 
-(To be filled by implementing agent)
+**Created:**
+- frontend/src/pages/ProjectDetail.test.tsx
+- frontend/src/pages/ProjectDetail.tsx
+
+**Modified:**
+- backend/app/routers/projects.py
+- backend/tests/api/test_projects_api.py
+- frontend/src/App.tsx
+- frontend/src/api/client.ts
+- frontend/src/hooks/useLogout.ts
+- frontend/src/pages/Projects.test.tsx
+- frontend/src/pages/Projects.tsx
+- _bmad-output/implementation-artifacts/2-2-view-project-details.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
 
 ### Change Log
 
-(To be filled by implementing agent)
+- 2026-01-22: Added project detail endpoint, UI, and tests for Story 2.2.

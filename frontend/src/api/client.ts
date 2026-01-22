@@ -129,4 +129,5 @@ export const projectsApi = {
   list: () => api.get<ApiResponse<ProjectData[]>>('/projects'),
   create: (data: CreateProjectData) =>
     api.post<ApiResponse<ProjectData>>('/projects', data),
+  get: (id: number) => api.get<ApiResponse<ProjectData>>(`/projects/${id}`),
 };
