@@ -9,8 +9,10 @@ vi.mock('../api/client', () => ({
   },
 }));
 
+const mockLogout = vi.fn();
+
 vi.mock('../hooks/useLogout', () => ({
-  useLogout: () => ({ logout: vi.fn() }),
+  useLogout: () => ({ logout: mockLogout }),
 }));
 
 import { projectsApi } from '../api/client';
@@ -19,6 +21,7 @@ describe('Projects page', () => {
   beforeEach(() => {
     vi.mocked(projectsApi.list).mockReset();
     vi.mocked(projectsApi.create).mockReset();
+    mockLogout.mockReset();
   });
 
   it('renders project list', async () => {
@@ -87,5 +90,33 @@ describe('Projects page', () => {
     expect(
       await screen.findByText(/you have not created any projects yet/i)
     ).toBeInTheDocument();
+  });
+
+  it('logs out on unauthorized list response', async () => {
+    vi.mocked(projectsApi.list).mockRejectedValue(new Error('401 Unauthorized'));
+
+    render(<Projects />);
+
+    await waitFor(() => {
+      expect(mockLogout).toHaveBeenCalled();
+    });
+  });
+
+  it('logs out on unauthorized create response', async () => {
+    vi.mocked(projectsApi.list).mockResolvedValue({ data: [] });
+    vi.mocked(projectsApi.create).mockRejectedValue(new Error('403 Forbidden'));
+
+    render(<Projects />);
+
+    await screen.findByText(/you have not created any projects yet/i);
+
+    fireEvent.change(screen.getByLabelText(/project name/i), {
+      target: { value: 'New Project' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /create project/i }));
+
+    await waitFor(() => {
+      expect(mockLogout).toHaveBeenCalled();
+    });
   });
 });

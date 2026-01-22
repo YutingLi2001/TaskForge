@@ -1,6 +1,6 @@
 # Story 2.1: Project List & Create
 
-Status: review
+Status: done
 
 ## Story
 
@@ -276,7 +276,11 @@ GPT-5 (Codex CLI)
 - Added Project model, schemas, and projects router with authenticated list/create endpoints.
 - Implemented Projects page UI, API client, and routing from Dashboard.
 - Added backend API coverage plus frontend Projects page tests and updated Dashboard tests.
+- Hardened project name validation against whitespace-only values and added coverage.
+- Redirects unauthorized project list/create responses via logout handler.
+- Projects endpoints use async handlers with threadpool for DB I/O.
 - Tests: `python -m unittest backend.tests.unit.test_project_model`, `python -m unittest backend.tests.unit.test_project_schema`, `python -m unittest backend.tests.unit.test_projects_router`, `python -m unittest backend.tests.api.test_projects_api`, `npm test` (frontend), `scripts/windows/run-backend-tests.bat`, `scripts/windows/run-frontend-tests.bat`.
+  - Additional: `python -m unittest backend.tests.unit.test_project_schema` (post-review fix).
 
 ### File List
 
@@ -296,9 +300,14 @@ GPT-5 (Codex CLI)
 - backend/app/models/__init__.py
 - backend/app/models/user.py
 - backend/app/routers/__init__.py
+- backend/app/routers/projects.py
 - backend/app/schemas/__init__.py
+- backend/app/schemas/project.py
+- backend/tests/unit/test_project_schema.py
 - frontend/src/App.tsx
 - frontend/src/api/client.ts
 - frontend/src/components/Header.test.tsx
 - frontend/src/pages/Dashboard.test.tsx
 - frontend/src/pages/Dashboard.tsx
+- frontend/src/pages/Projects.test.tsx
+- frontend/src/pages/Projects.tsx

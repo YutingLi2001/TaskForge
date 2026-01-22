@@ -7,6 +7,14 @@ import { useLogout } from '../hooks/useLogout';
 export default function Projects() {
   const { logout } = useLogout();
   const userEmail = localStorage.getItem('user_email');
+  const handleAuthError = (err: unknown) => {
+    const message = err instanceof Error ? err.message : '';
+    if (message.toLowerCase().includes('401') || message.toLowerCase().includes('403')) {
+      logout();
+      return true;
+    }
+    return false;
+  };
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +34,9 @@ export default function Projects() {
       })
       .catch((err) => {
         if (!active) return;
+        if (handleAuthError(err)) {
+          return;
+        }
         setError(err instanceof Error ? err.message : 'Failed to load projects');
       })
       .finally(() => {
@@ -54,6 +65,9 @@ export default function Projects() {
       setProjects((prev) => [response.data, ...prev]);
       setName('');
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
       setFormError(err instanceof Error ? err.message : 'Unable to create project');
     } finally {
       setSubmitting(false);

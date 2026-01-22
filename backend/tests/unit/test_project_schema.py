@@ -10,6 +10,10 @@ class ProjectSchemaTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             ProjectCreate(name="")
 
+    def test_project_create_rejects_whitespace_only_name(self):
+        with self.assertRaises(ValidationError):
+            ProjectCreate(name="   ")
+
 
 if __name__ == "__main__":
     unittest.main()
