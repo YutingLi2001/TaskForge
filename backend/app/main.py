@@ -1,4 +1,5 @@
 import time
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +9,13 @@ from .routers import auth_router
 from . import database as db
 from .config import FRONTEND_URLS
 
-app = FastAPI(title="TaskForge API", version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="TaskForge API", version="1.0.0", lifespan=lifespan)
 
 # CORS middleware for frontend
 app.add_middleware(
@@ -34,11 +41,6 @@ def init_db(max_attempts: int = 10, delay_seconds: float = 1.0) -> None:
             time.sleep(delay_seconds)
     if last_error:
         raise last_error
-
-
-@app.on_event("startup")
-def on_startup() -> None:
-    init_db()
 
 
 @app.get("/api/health")
