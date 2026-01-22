@@ -55,7 +55,8 @@ export default function ProjectDetail() {
     return () => {
       active = false;
     };
-  }, [id, logout]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   return (
     <div className="min-h-screen bg-gray-100">
