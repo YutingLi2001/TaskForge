@@ -1,6 +1,6 @@
 # Story 3.2: Edit Task
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -21,55 +21,55 @@ So that **I can update task details**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Backend TaskUpdate Schema** (AC: 2, 3)
-  - [ ] Add `TaskUpdate` schema to `backend/app/schemas/task.py`
-  - [ ] Use same validation as `TaskCreate` (title: str, min_length=1, max_length=200, strip whitespace)
-  - [ ] Export from `backend/app/schemas/__init__.py`
+- [x] **Task 1: Backend TaskUpdate Schema** (AC: 2, 3)
+  - [x] Add `TaskUpdate` schema to `backend/app/schemas/task.py`
+  - [x] Use same validation as `TaskCreate` (title: str, min_length=1, max_length=200, strip whitespace)
+  - [x] Export from `backend/app/schemas/__init__.py`
 
-- [ ] **Task 2: Backend PUT Endpoint** (AC: 2, 3, 4, 5, 6, 8)
-  - [ ] Add `PUT /api/projects/{project_id}/tasks/{task_id}` endpoint to `backend/app/routers/tasks.py`
-  - [ ] Use `get_current_user` dependency for authentication
-  - [ ] Query project by ID, return 404 if not found
-  - [ ] Check project ownership, return 403 if not owner
-  - [ ] Query task by ID, return 404 if not found
-  - [ ] Verify task belongs to project (extra safety check)
-  - [ ] Update task title and `updated_at` timestamp
-  - [ ] Return updated task data with 200
+- [x] **Task 2: Backend PUT Endpoint** (AC: 2, 3, 4, 5, 6, 8)
+  - [x] Add `PUT /api/projects/{project_id}/tasks/{task_id}` endpoint to `backend/app/routers/tasks.py`
+  - [x] Use `get_current_user` dependency for authentication
+  - [x] Query project by ID, return 404 if not found
+  - [x] Check project ownership, return 403 if not owner
+  - [x] Query task by ID, return 404 if not found
+  - [x] Verify task belongs to project (extra safety check)
+  - [x] Update task title and `updated_at` timestamp
+  - [x] Return updated task data with 200
 
-- [ ] **Task 3: Backend Testing** (AC: 2, 3, 4, 5, 6, 8)
-  - [ ] Add tests to `backend/tests/api/test_tasks_api.py`
-  - [ ] Test: PUT /projects/{pid}/tasks/{tid} updates title and returns updated task
-  - [ ] Test: PUT with empty title returns 422
-  - [ ] Test: PUT with whitespace-only title returns 422
-  - [ ] Test: PUT returns 404 for non-existent task
-  - [ ] Test: PUT returns 404 for non-existent project
-  - [ ] Test: PUT returns 403 for project not owned by user
-  - [ ] Test: PUT returns 401 for unauthenticated request
-  - [ ] Test: PUT trims whitespace from title
+- [x] **Task 3: Backend Testing** (AC: 2, 3, 4, 5, 6, 8)
+  - [x] Add tests to `backend/tests/api/test_tasks_api.py`
+  - [x] Test: PUT /projects/{pid}/tasks/{tid} updates title and returns updated task
+  - [x] Test: PUT with empty title returns 422
+  - [x] Test: PUT with whitespace-only title returns 422
+  - [x] Test: PUT returns 404 for non-existent task
+  - [x] Test: PUT returns 404 for non-existent project
+  - [x] Test: PUT returns 403 for project not owned by user
+  - [x] Test: PUT returns 401 for unauthenticated request
+  - [x] Test: PUT trims whitespace from title
 
-- [ ] **Task 4: Frontend API Client** (AC: 2)
-  - [ ] Add `UpdateTaskData` interface to `frontend/src/api/client.ts`
-  - [ ] Add `update(projectId: number, taskId: number, data: UpdateTaskData)` method to `tasksApi`
-  - [ ] Returns `ApiResponse<TaskData>`
+- [x] **Task 4: Frontend API Client** (AC: 2)
+  - [x] Add `UpdateTaskData` interface to `frontend/src/api/client.ts`
+  - [x] Add `update(projectId: number, taskId: number, data: UpdateTaskData)` method to `tasksApi`
+  - [x] Returns `ApiResponse<TaskData>`
 
-- [ ] **Task 5: Edit UI for Tasks in ProjectDetail** (AC: 1, 2, 3, 7)
-  - [ ] Update `frontend/src/pages/ProjectDetail.tsx`
-  - [ ] Add edit mode state per task (track which task is being edited)
-  - [ ] Add "Edit" button on each task item
-  - [ ] Show input field with current title when in edit mode
-  - [ ] Add "Save" and "Cancel" buttons in edit mode
-  - [ ] Call `tasksApi.update()` on save
-  - [ ] Show validation error for empty title
-  - [ ] Update local tasks state on successful save
-  - [ ] Handle 403/404 errors gracefully
-  - [ ] Style with Tailwind CSS matching existing design
+- [x] **Task 5: Edit UI for Tasks in ProjectDetail** (AC: 1, 2, 3, 7)
+  - [x] Update `frontend/src/pages/ProjectDetail.tsx`
+  - [x] Add edit mode state per task (track which task is being edited)
+  - [x] Add "Edit" button on each task item
+  - [x] Show input field with current title when in edit mode
+  - [x] Add "Save" and "Cancel" buttons in edit mode
+  - [x] Call `tasksApi.update()` on save
+  - [x] Show validation error for empty title
+  - [x] Update local tasks state on successful save
+  - [x] Handle 403/404 errors gracefully
+  - [x] Style with Tailwind CSS matching existing design
 
-- [ ] **Task 6: Frontend Testing** (AC: 1, 2, 3, 7)
-  - [ ] Update `frontend/src/pages/ProjectDetail.test.tsx`
-  - [ ] Test: Edit button on task toggles edit mode for that task
-  - [ ] Test: Save submits update and shows new title
-  - [ ] Test: Empty title shows validation error
-  - [ ] Test: Cancel discards changes and exits edit mode
+- [x] **Task 6: Frontend Testing** (AC: 1, 2, 3, 7)
+  - [x] Update `frontend/src/pages/ProjectDetail.test.tsx`
+  - [x] Test: Edit button on task toggles edit mode for that task
+  - [x] Test: Save submits update and shows new title
+  - [x] Test: Empty title shows validation error
+  - [x] Test: Cancel discards changes and exits edit mode
   - [ ] Test: Only one task can be in edit mode at a time (optional UX improvement)
 
 ## Dev Notes
@@ -371,15 +371,26 @@ const handleSaveTask = async (taskId: number) => {
 
 ### Agent Model Used
 
-(To be filled by dev agent)
+Codex (GPT-5)
 
 ### Implementation Plan
 
-(To be filled by dev agent)
+1. Add TaskUpdate schema + unit tests for validation rules.
+2. Add PUT endpoint with auth/ownership checks and update behavior.
+3. Add backend API tests for update scenarios (success + error cases).
+4. Add frontend API client update method.
+5. Implement task inline edit UI with validation + error handling.
+6. Add frontend tests for edit flows; run full test suite.
 
 ### Completion Notes List
 
-(To be filled by dev agent)
+- Added `TaskUpdate` schema with shared validation behavior and unit tests for update validation.
+- Implemented task update endpoint with ownership checks and title trimming.
+- Added API tests covering update success and error cases.
+- Added task update API client, inline edit UI, and frontend edit tests.
+- Resolved frontend lint issues in route guards and projects list.
+- Added update error-state tests and backend cross-project update coverage.
+- Tests run: `python -m unittest backend.tests.unit.test_task_schema`, `python -m unittest backend.tests.api.test_tasks_api`, `npm test -- --run src/pages/ProjectDetail.test.tsx`, `scripts/windows/run-backend-tests.ps1`, `scripts/windows/run-frontend-tests.ps1`, `npm run lint`, `python -m unittest backend.tests.api.test_tasks_api.TasksApiTests.test_update_task_returns_404_when_task_not_in_project`
 
 ### File List
 
@@ -392,6 +403,22 @@ const handleSaveTask = async (taskId: number) => {
 - frontend/src/pages/ProjectDetail.tsx (add task edit UI)
 - frontend/src/pages/ProjectDetail.test.tsx (add task edit tests)
 
+**Modified:**
+- backend/app/schemas/task.py
+- backend/app/schemas/__init__.py
+- backend/tests/unit/test_task_schema.py
+- backend/app/routers/tasks.py
+- backend/tests/api/test_tasks_api.py
+- frontend/src/api/client.ts
+- frontend/src/components/ProtectedRoute.tsx
+- frontend/src/components/PublicRoute.tsx
+- frontend/src/pages/ProjectDetail.tsx
+- frontend/src/pages/ProjectDetail.test.tsx
+- frontend/src/pages/Projects.tsx
+
 ### Change Log
 
-(To be filled by dev agent)
+- 2026-01-23: Added TaskUpdate schema and validation unit tests.
+- 2026-01-23: Added task update endpoint and API tests.
+- 2026-01-23: Added task edit UI, API client update method, and frontend tests.
+- 2026-01-23: Fixed frontend lint warnings in auth routes and projects list.

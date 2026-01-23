@@ -20,6 +20,10 @@ export default function ProjectDetail() {
   const [taskError, setTaskError] = useState<string | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [creatingTask, setCreatingTask] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+  const [editTaskTitle, setEditTaskTitle] = useState('');
+  const [editTaskError, setEditTaskError] = useState<string | null>(null);
+  const [savingTask, setSavingTask] = useState(false);
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -251,6 +255,73 @@ export default function ProjectDetail() {
     }
   };
 
+  const handleEditTask = (task: TaskData) => {
+    if (savingTask) return;
+    setEditingTaskId(task.id);
+    setEditTaskTitle(task.title);
+    setEditTaskError(null);
+  };
+
+  const handleCancelEditTask = () => {
+    setEditingTaskId(null);
+    setEditTaskTitle('');
+    setEditTaskError(null);
+  };
+
+  const handleSaveTask = async (taskId: number) => {
+    if (!project) return;
+    if (savingTask) return;
+
+    const trimmed = editTaskTitle.trim();
+    if (!trimmed) {
+      setEditTaskError('Task title is required.');
+      return;
+    }
+    if (trimmed.length > 200) {
+      setEditTaskError('Task title must be 200 characters or less.');
+      return;
+    }
+
+    setSavingTask(true);
+    setEditTaskError(null);
+
+    try {
+      const response = await tasksApi.update(project.id, taskId, {
+        title: trimmed,
+      });
+      setTasks((current) =>
+        current.map((task) => (task.id === taskId ? response.data : task))
+      );
+      setEditingTaskId(null);
+      setEditTaskTitle('');
+      setEditTaskError(null);
+    } catch (err) {
+      if (err instanceof ApiRequestError) {
+        if (err.status === 401) {
+          logout();
+          return;
+        }
+        if (err.status === 403) {
+          setEditTaskError('You do not have permission to edit this task.');
+          return;
+        }
+        if (err.status === 404) {
+          setEditTaskError('Task not found.');
+          return;
+        }
+        if (err.status === 422) {
+          setEditTaskError('Invalid task title.');
+          return;
+        }
+      }
+      setEditTaskError(
+        err instanceof Error ? err.message : 'Failed to update task'
+      );
+    } finally {
+      setSavingTask(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Header onLogout={logout} userEmail={userEmail} />
@@ -391,20 +462,69 @@ export default function ProjectDetail() {
                       key={task.id}
                       className="flex items-center gap-3 rounded-md border border-gray-200 px-4 py-3"
                     >
-                      <span
-                        className={`h-3 w-3 rounded-full ${
-                          task.is_complete ? 'bg-green-500' : 'bg-gray-300'
-                        }`}
-                      />
-                      <span
-                        className={
-                          task.is_complete
-                            ? 'text-gray-500 line-through'
-                            : 'text-gray-900'
-                        }
-                      >
-                        {task.title}
-                      </span>
+                      {editingTaskId === task.id ? (
+                        <div className="flex w-full flex-col gap-2">
+                          <div className="flex w-full items-center gap-2">
+                            <input
+                              type="text"
+                              value={editTaskTitle}
+                              onChange={(event) =>
+                                setEditTaskTitle(event.target.value)
+                              }
+                              className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              disabled={savingTask}
+                              aria-label="Edit task title"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleSaveTask(task.id)}
+                              disabled={savingTask}
+                              className="rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              {savingTask ? 'Saving...' : 'Save'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleCancelEditTask}
+                              disabled={savingTask}
+                              className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                          {editTaskError ? (
+                            <p className="text-sm text-red-600">
+                              {editTaskError}
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <>
+                          <span
+                            className={`h-3 w-3 rounded-full ${
+                              task.is_complete ? 'bg-green-500' : 'bg-gray-300'
+                            }`}
+                          />
+                          <span
+                            className={
+                              task.is_complete
+                                ? 'text-gray-500 line-through'
+                                : 'text-gray-900'
+                            }
+                          >
+                            {task.title}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleEditTask(task)}
+                            disabled={savingTask}
+                            className="ml-auto text-sm font-medium text-blue-600 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                            aria-label={`Edit task ${task.title}`}
+                          >
+                            Edit
+                          </button>
+                        </>
+                      )}
                     </li>
                   ))}
                 </ul>

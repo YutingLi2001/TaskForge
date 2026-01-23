@@ -17,6 +17,20 @@ class TaskCreate(BaseModel):
         return trimmed
 
 
+class TaskUpdate(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def title_not_blank(cls, value: str) -> str:
+        if not isinstance(value, str):
+            raise ValueError("Task title must be a string")
+        trimmed = value.strip()
+        if not trimmed:
+            raise ValueError("Task title cannot be blank")
+        return trimmed
+
+
 class TaskResponse(BaseModel):
     id: int
     title: str

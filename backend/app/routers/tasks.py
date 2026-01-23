@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +8,13 @@ from ..database import get_db
 from ..models.project import Project
 from ..models.task import Task
 from ..models.user import User
-from ..schemas.task import TaskCreate, TaskDataResponse, TaskListResponse, TaskResponse
+from ..schemas.task import (
+    TaskCreate,
+    TaskDataResponse,
+    TaskListResponse,
+    TaskResponse,
+    TaskUpdate,
+)
 from ..utils.auth import get_current_user
 
 router = APIRouter(prefix="/projects/{project_id}/tasks", tags=["tasks"])
@@ -51,6 +59,27 @@ async def create_task(
     project = await get_project_or_404(project_id, current_user, db)
     task = Task(title=task_data.title, project_id=project.id)
     db.add(task)
+    await db.commit()
+    await db.refresh(task)
+    return TaskDataResponse(data=TaskResponse.model_validate(task))
+
+
+@router.put("/{task_id}", response_model=TaskDataResponse)
+async def update_task(
+    project_id: int,
+    task_id: int,
+    task_data: TaskUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    project = await get_project_or_404(project_id, current_user, db)
+    task = await db.scalar(select(Task).where(Task.id == task_id))
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if task.project_id != project.id:
+        raise HTTPException(status_code=404, detail="Task not found")
+    task.title = task_data.title
+    task.updated_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(task)
     return TaskDataResponse(data=TaskResponse.model_validate(task))

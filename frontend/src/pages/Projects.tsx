@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import Header from '../components/Header';
 import { Link } from 'react-router-dom';
 import { ApiRequestError, projectsApi } from '../api/client';
@@ -8,13 +8,13 @@ import { useLogout } from '../hooks/useLogout';
 export default function Projects() {
   const { logout } = useLogout();
   const userEmail = localStorage.getItem('user_email');
-  const handleAuthError = (err: unknown) => {
+  const handleAuthError = useCallback((err: unknown) => {
     if (err instanceof ApiRequestError && (err.status === 401 || err.status === 403)) {
       logout();
       return true;
     }
     return false;
-  };
+  }, [logout]);
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +47,7 @@ export default function Projects() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [handleAuthError]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

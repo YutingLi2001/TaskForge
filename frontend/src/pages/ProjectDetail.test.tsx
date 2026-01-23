@@ -35,6 +35,7 @@ vi.mock('../api/client', async () => {
     tasksApi: {
       list: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     },
   };
 });
@@ -48,6 +49,7 @@ describe('ProjectDetail page', () => {
     vi.mocked(projectsApi.delete).mockReset();
     vi.mocked(tasksApi.list).mockReset();
     vi.mocked(tasksApi.create).mockReset();
+    vi.mocked(tasksApi.update).mockReset();
     mockLogout.mockReset();
     mockNavigate.mockReset();
     vi.mocked(tasksApi.list).mockResolvedValue({ data: [] });
@@ -816,5 +818,365 @@ describe('ProjectDetail page', () => {
     await waitFor(() => {
       expect(mockLogout).toHaveBeenCalled();
     });
+  });
+
+  // Story 3.2: Edit Task
+
+  it('shows edit controls for a task when edit clicked', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: false,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+
+    renderWithRoute('1');
+
+    const editButton = await screen.findByRole('button', {
+      name: /edit task/i,
+    });
+    await user.click(editButton);
+
+    expect(screen.getByLabelText(/edit task title/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
+  });
+
+  it('saves task title updates and exits edit mode', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: false,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+    vi.mocked(tasksApi.update).mockResolvedValue({
+      data: {
+        id: 10,
+        title: 'Updated flows',
+        is_complete: false,
+        project_id: 1,
+        created_at: '2026-01-23T00:00:00Z',
+        updated_at: '2026-01-24T00:00:00Z',
+      },
+    });
+
+    renderWithRoute('1');
+
+    const editButton = await screen.findByRole('button', {
+      name: /edit task/i,
+    });
+    await user.click(editButton);
+
+    const input = screen.getByLabelText(/edit task title/i);
+    await user.clear(input);
+    await user.type(input, '  Updated flows  ');
+
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(tasksApi.update).toHaveBeenCalledWith(1, 10, {
+        title: 'Updated flows',
+      });
+    });
+
+    expect(await screen.findByText('Updated flows')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();
+  });
+
+  it('shows validation error for empty task title and does not submit', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: false,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+
+    renderWithRoute('1');
+
+    const editButton = await screen.findByRole('button', {
+      name: /edit task/i,
+    });
+    await user.click(editButton);
+
+    const input = screen.getByLabelText(/edit task title/i);
+    await user.clear(input);
+
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    expect(await screen.findByText(/task title is required/i)).toBeInTheDocument();
+    expect(tasksApi.update).not.toHaveBeenCalled();
+  });
+
+  it('shows error when task update returns 403', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: false,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+    vi.mocked(tasksApi.update).mockRejectedValue(
+      new ApiRequestError(403, 'Forbidden')
+    );
+
+    renderWithRoute('1');
+
+    const editButton = await screen.findByRole('button', {
+      name: /edit task/i,
+    });
+    await user.click(editButton);
+
+    const input = screen.getByLabelText(/edit task title/i);
+    await user.clear(input);
+    await user.type(input, 'Updated');
+
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    expect(
+      await screen.findByText(/permission to edit this task/i)
+    ).toBeInTheDocument();
+  });
+
+  it('shows error when task update returns 404', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: false,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+    vi.mocked(tasksApi.update).mockRejectedValue(
+      new ApiRequestError(404, 'Task not found')
+    );
+
+    renderWithRoute('1');
+
+    const editButton = await screen.findByRole('button', {
+      name: /edit task/i,
+    });
+    await user.click(editButton);
+
+    const input = screen.getByLabelText(/edit task title/i);
+    await user.clear(input);
+    await user.type(input, 'Updated');
+
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    expect(await screen.findByText(/task not found/i)).toBeInTheDocument();
+  });
+
+  it('logs out when task update returns 401', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: false,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+    vi.mocked(tasksApi.update).mockRejectedValue(
+      new ApiRequestError(401, 'Not authenticated')
+    );
+
+    renderWithRoute('1');
+
+    const editButton = await screen.findByRole('button', {
+      name: /edit task/i,
+    });
+    await user.click(editButton);
+
+    const input = screen.getByLabelText(/edit task title/i);
+    await user.clear(input);
+    await user.type(input, 'Updated');
+
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(mockLogout).toHaveBeenCalled();
+    });
+  });
+
+  it('shows error when task update returns 422', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: false,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+    vi.mocked(tasksApi.update).mockRejectedValue(
+      new ApiRequestError(422, 'Invalid')
+    );
+
+    renderWithRoute('1');
+
+    const editButton = await screen.findByRole('button', {
+      name: /edit task/i,
+    });
+    await user.click(editButton);
+
+    const input = screen.getByLabelText(/edit task title/i);
+    await user.clear(input);
+    await user.type(input, 'Updated');
+
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    expect(await screen.findByText(/invalid task title/i)).toBeInTheDocument();
+  });
+
+  it('cancels task edit and restores original title', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: false,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+
+    renderWithRoute('1');
+
+    const editButton = await screen.findByRole('button', {
+      name: /edit task/i,
+    });
+    await user.click(editButton);
+
+    const input = screen.getByLabelText(/edit task title/i);
+    await user.clear(input);
+    await user.type(input, 'Changed');
+
+    const cancelButton = screen.getByRole('button', { name: /cancel/i });
+    await user.click(cancelButton);
+
+    expect(screen.queryByDisplayValue('Changed')).not.toBeInTheDocument();
+    expect(await screen.findByText('Design flows')).toBeInTheDocument();
+    expect(tasksApi.update).not.toHaveBeenCalled();
   });
 });

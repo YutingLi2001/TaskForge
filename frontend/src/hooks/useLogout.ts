@@ -1,10 +1,11 @@
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../api/client';
 
 export function useLogout() {
   const navigate = useNavigate();
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     const refreshToken = localStorage.getItem('refresh_token');
     try {
       if (refreshToken) {
@@ -18,7 +19,7 @@ export function useLogout() {
       localStorage.removeItem('user_email');
       navigate('/login');
     }
-  };
+  }, [navigate]);
 
   return { logout };
 }

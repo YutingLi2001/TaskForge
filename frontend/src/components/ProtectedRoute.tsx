@@ -30,12 +30,11 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [status, setStatus] = useState<'checking' | 'allowed' | 'denied'>(() => {
     return !token || !isTokenValid(token) ? 'denied' : 'checking';
   });
+  const tokenValid = isTokenValid(token);
+  const effectiveStatus = tokenValid ? status : 'denied';
 
   useEffect(() => {
-    if (!token || !isTokenValid(token)) {
-      setStatus('denied');
-      return;
-    }
+    if (!tokenValid) return;
     let active = true;
     authApi.me()
       .then(() => {
@@ -57,13 +56,13 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return () => {
       active = false;
     };
-  }, [token]);
+  }, [tokenValid]);
 
-  if (status === 'checking') {
+  if (effectiveStatus === 'checking') {
     return null;
   }
 
-  if (status === 'denied') {
+  if (effectiveStatus === 'denied') {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
