@@ -311,6 +311,39 @@ class ProjectsApiTests(unittest.TestCase):
         body = response.json()
         self.assertEqual(body["data"]["name"], "Trimmed Name")
 
+    # Tech Debt Fix: Project name max length constraint
+    def test_create_project_name_too_long_returns_422(self):
+        user = self._create_user("user@example.com", "secret123")
+        long_name = "x" * 101  # exceeds 100 char limit
+        response = self.client.post(
+            "/api/projects",
+            json={"name": long_name},
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 422)
+
+    def test_update_project_name_too_long_returns_422(self):
+        user = self._create_user("user@example.com", "secret123")
+        session = db.SessionLocal()
+        try:
+            project = self.Project(name="Original Name", user_id=user.id)
+            session.add(project)
+            session.commit()
+            session.refresh(project)
+            project_id = project.id
+        finally:
+            session.close()
+
+        long_name = "x" * 101  # exceeds 100 char limit
+        response = self.client.put(
+            f"/api/projects/{project_id}",
+            json={"name": long_name},
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 422)
+
     # Story 2.4: Delete Project tests
     def test_delete_project_removes_project_for_owner(self):
         user = self._create_user("user@example.com", "secret123")

@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(powershell -Command \"cd ''c:\\\\Users\\\\Yuting\\\\Projects\\\\TaskForge\\\\frontend''; npm test -- --run\")"
+      "Bash(powershell -Command \"cd ''c:\\\\Users\\\\Yuting\\\\Projects\\\\TaskForge\\\\frontend''; npm test -- --run\")",
+      "Bash(powershell -Command \"cd ''c:\\\\Users\\\\Yuting\\\\Projects\\\\TaskForge''; .\\\\scripts\\\\windows\\\\run-backend-tests.ps1\")",
+      "Bash(powershell:*)",
+      "Read(//c/**)",
+      "Bash(cd:*)"
     ]
   }
 }
