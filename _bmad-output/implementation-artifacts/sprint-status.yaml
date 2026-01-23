@@ -46,7 +46,7 @@ development_status:
   2-1-project-list-create: done
   2-2-view-project-details: done
   2-3-edit-project: review
-  2-4-delete-project: backlog
+  2-4-delete-project: done
   epic-2-retrospective: optional
 
   # Epic 3: Task Management
