@@ -188,6 +188,129 @@ class ProjectsApiTests(unittest.TestCase):
         response = self.client.get("/api/projects/1")
         self.assertEqual(response.status_code, 401)
 
+        response = self.client.put("/api/projects/1", json={"name": "Updated"})
+        self.assertEqual(response.status_code, 401)
+
+    # Story 2.3: Edit Project tests
+
+    def test_update_project_returns_updated_project(self):
+        user = self._create_user("user@example.com", "secret123")
+        session = db.SessionLocal()
+        try:
+            project = self.Project(name="Original Name", user_id=user.id)
+            session.add(project)
+            session.commit()
+            session.refresh(project)
+            project_id = project.id
+            original_updated_at = project.updated_at
+        finally:
+            session.close()
+
+        response = self.client.put(
+            f"/api/projects/{project_id}",
+            json={"name": "Updated Name"},
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["data"]["id"], project_id)
+        self.assertEqual(body["data"]["name"], "Updated Name")
+        self.assertEqual(body["data"]["user_id"], user.id)
+
+    def test_update_project_empty_name_returns_422(self):
+        user = self._create_user("user@example.com", "secret123")
+        session = db.SessionLocal()
+        try:
+            project = self.Project(name="Original Name", user_id=user.id)
+            session.add(project)
+            session.commit()
+            session.refresh(project)
+            project_id = project.id
+        finally:
+            session.close()
+
+        response = self.client.put(
+            f"/api/projects/{project_id}",
+            json={"name": ""},
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 422)
+
+    def test_update_project_whitespace_name_returns_422(self):
+        user = self._create_user("user@example.com", "secret123")
+        session = db.SessionLocal()
+        try:
+            project = self.Project(name="Original Name", user_id=user.id)
+            session.add(project)
+            session.commit()
+            session.refresh(project)
+            project_id = project.id
+        finally:
+            session.close()
+
+        response = self.client.put(
+            f"/api/projects/{project_id}",
+            json={"name": "   "},
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 422)
+
+    def test_update_project_returns_404_for_missing_project(self):
+        user = self._create_user("user@example.com", "secret123")
+        response = self.client.put(
+            "/api/projects/9999",
+            json={"name": "Updated Name"},
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_update_project_returns_403_for_non_owner(self):
+        owner = self._create_user("owner@example.com", "secret123")
+        other = self._create_user("other@example.com", "secret123")
+        session = db.SessionLocal()
+        try:
+            project = self.Project(name="Owner Project", user_id=owner.id)
+            session.add(project)
+            session.commit()
+            session.refresh(project)
+            project_id = project.id
+        finally:
+            session.close()
+
+        response = self.client.put(
+            f"/api/projects/{project_id}",
+            json={"name": "Hacked Name"},
+            headers=self._auth_header_for(other.email),
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_update_project_trims_whitespace(self):
+        user = self._create_user("user@example.com", "secret123")
+        session = db.SessionLocal()
+        try:
+            project = self.Project(name="Original Name", user_id=user.id)
+            session.add(project)
+            session.commit()
+            session.refresh(project)
+            project_id = project.id
+        finally:
+            session.close()
+
+        response = self.client.put(
+            f"/api/projects/{project_id}",
+            json={"name": "  Trimmed Name  "},
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["data"]["name"], "Trimmed Name")
+
 
 if __name__ == "__main__":
     unittest.main()

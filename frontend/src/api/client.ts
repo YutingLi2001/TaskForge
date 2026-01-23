@@ -113,6 +113,10 @@ export interface CreateProjectData {
   name: string;
 }
 
+export interface UpdateProjectData {
+  name: string;
+}
+
 export const authApi = {
   register: (data: RegisterData) =>
     api.post<ApiResponse<UserData>>('/auth/register', data),
@@ -130,4 +134,6 @@ export const projectsApi = {
   create: (data: CreateProjectData) =>
     api.post<ApiResponse<ProjectData>>('/projects', data),
   get: (id: number) => api.get<ApiResponse<ProjectData>>(`/projects/${id}`),
+  update: (id: number, data: UpdateProjectData) =>
+    api.put<ApiResponse<ProjectData>>(`/projects/${id}`, data),
 };

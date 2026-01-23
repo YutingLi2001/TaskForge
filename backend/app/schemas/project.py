@@ -15,6 +15,18 @@ class ProjectCreate(BaseModel):
         return trimmed
 
 
+class ProjectUpdate(BaseModel):
+    name: str = Field(min_length=1)
+
+    @field_validator("name")
+    @classmethod
+    def name_not_blank(cls, value: str) -> str:
+        trimmed = value.strip()
+        if not trimmed:
+            raise ValueError("Project name cannot be blank")
+        return trimmed
+
+
 class ProjectResponse(BaseModel):
     id: int
     name: str

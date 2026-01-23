@@ -3,6 +3,7 @@ from .project import (
     ProjectDataResponse,
     ProjectListResponse,
     ProjectResponse,
+    ProjectUpdate,
 )
 from .user import UserCreate, UserResponse
 
@@ -11,6 +12,7 @@ __all__ = [
     "ProjectDataResponse",
     "ProjectListResponse",
     "ProjectResponse",
+    "ProjectUpdate",
     "UserCreate",
     "UserResponse",
 ]
