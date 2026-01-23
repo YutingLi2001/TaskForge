@@ -42,12 +42,12 @@ development_status:
   epic-1-retrospective: done
 
   # Epic 2: Project Management
-  epic-2: in-progress
+  epic-2: done
   2-1-project-list-create: done
   2-2-view-project-details: done
-  2-3-edit-project: review
+  2-3-edit-project: done
   2-4-delete-project: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
 
   # Epic 3: Task Management
   epic-3: backlog
