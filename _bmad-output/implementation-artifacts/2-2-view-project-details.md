@@ -1,6 +1,6 @@
 # Story 2.2: View Project Details
 
-Status: review
+Status: done
 
 ## Story
 

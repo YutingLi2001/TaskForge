@@ -9,6 +9,7 @@ from ..schemas.project import (
     ProjectDataResponse,
     ProjectListResponse,
     ProjectResponse,
+    ProjectUpdate,
 )
 from ..utils.auth import get_current_user
 
@@ -50,4 +51,24 @@ def get_project(
         raise HTTPException(
             status_code=403, detail="Not authorized to access this project"
         )
+    return ProjectDataResponse(data=ProjectResponse.model_validate(project))
+
+
+@router.put("/{project_id}", response_model=ProjectDataResponse)
+def update_project(
+    project_id: int,
+    project_data: ProjectUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if project.user_id != current_user.id:
+        raise HTTPException(
+            status_code=403, detail="Not authorized to access this project"
+        )
+    project.name = project_data.name
+    db.commit()
+    db.refresh(project)
     return ProjectDataResponse(data=ProjectResponse.model_validate(project))
