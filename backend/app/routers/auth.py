@@ -33,6 +33,14 @@ router = APIRouter()
 _login_rate_limit: dict[tuple[str, str], list[datetime]] = {}
 
 
+def _ensure_aware(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
+
+
 @router.post("/register", response_model=UserDataResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     """Register a new user."""
@@ -82,7 +90,8 @@ async def login(
         )
 
     user = await db.scalar(select(User).where(User.email == credentials.email))
-    if user and user.locked_until and user.locked_until > now:
+    locked_until = _ensure_aware(user.locked_until) if user else None
+    if locked_until and locked_until > now:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is temporarily locked. Try again later."
@@ -144,7 +153,8 @@ async def refresh_token(payload: RefreshRequest, db: AsyncSession = Depends(get_
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token"
         )
-    if user.refresh_token_expires_at and user.refresh_token_expires_at < now:
+    refresh_expires = _ensure_aware(user.refresh_token_expires_at)
+    if refresh_expires and refresh_expires < now:
         user.refresh_token_hash = None
         user.refresh_token_expires_at = None
         db.add(user)
