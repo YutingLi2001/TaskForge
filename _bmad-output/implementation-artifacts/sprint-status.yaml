@@ -44,7 +44,7 @@ development_status:
   # Epic 2: Project Management
   epic-2: in-progress
   2-1-project-list-create: done
-  2-2-view-project-details: backlog
+  2-2-view-project-details: review
   2-3-edit-project: backlog
   2-4-delete-project: backlog
   epic-2-retrospective: optional

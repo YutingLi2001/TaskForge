@@ -96,6 +96,28 @@ class ProjectsApiTests(unittest.TestCase):
         self.assertEqual(body["data"]["name"], "My Project")
         self.assertEqual(body["data"]["user_id"], user.id)
 
+    def test_get_project_returns_project_for_owner(self):
+        user = self._create_user("owner@example.com", "secret123")
+        session = db.SessionLocal()
+        try:
+            project = self.Project(name="Owner Project", user_id=user.id)
+            session.add(project)
+            session.commit()
+            session.refresh(project)
+        finally:
+            session.close()
+
+        response = self.client.get(
+            f"/api/projects/{project.id}",
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["data"]["id"], project.id)
+        self.assertEqual(body["data"]["name"], "Owner Project")
+        self.assertEqual(body["data"]["user_id"], user.id)
+
     def test_list_projects_only_returns_current_user(self):
         user_a = self._create_user("a@example.com", "secret123")
         user_b = self._create_user("b@example.com", "secret123")
@@ -128,11 +150,42 @@ class ProjectsApiTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 422)
 
+    def test_get_project_returns_404_for_missing_project(self):
+        user = self._create_user("user@example.com", "secret123")
+        response = self.client.get(
+            "/api/projects/9999",
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_project_returns_403_for_non_owner(self):
+        owner = self._create_user("owner@example.com", "secret123")
+        other = self._create_user("other@example.com", "secret123")
+        session = db.SessionLocal()
+        try:
+            project = self.Project(name="Owner Project", user_id=owner.id)
+            session.add(project)
+            session.commit()
+            session.refresh(project)
+        finally:
+            session.close()
+
+        response = self.client.get(
+            f"/api/projects/{project.id}",
+            headers=self._auth_header_for(other.email),
+        )
+
+        self.assertEqual(response.status_code, 403)
+
     def test_unauthenticated_requests_return_401(self):
         response = self.client.get("/api/projects")
         self.assertEqual(response.status_code, 401)
 
         response = self.client.post("/api/projects", json={"name": "Test"})
+        self.assertEqual(response.status_code, 401)
+
+        response = self.client.get("/api/projects/1")
         self.assertEqual(response.status_code, 401)
 
 

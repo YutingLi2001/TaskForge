@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -34,4 +34,20 @@ def create_project(
     db.add(project)
     db.commit()
     db.refresh(project)
+    return ProjectDataResponse(data=ProjectResponse.model_validate(project))
+
+
+@router.get("/{project_id}", response_model=ProjectDataResponse)
+def get_project(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if project.user_id != current_user.id:
+        raise HTTPException(
+            status_code=403, detail="Not authorized to access this project"
+        )
     return ProjectDataResponse(data=ProjectResponse.model_validate(project))

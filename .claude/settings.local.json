@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"cd ''c:\\\\Users\\\\Yuting\\\\Projects\\\\TaskForge\\\\frontend''; npm test -- --run\")"
+    ]
+  }
+}

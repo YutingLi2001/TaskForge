@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import Projects from './Projects';
 
 vi.mock('../api/client', async () => {
@@ -43,9 +44,15 @@ describe('Projects page', () => {
       ],
     });
 
-    render(<Projects />);
+    render(
+      <MemoryRouter>
+        <Projects />
+      </MemoryRouter>
+    );
 
-    expect(await screen.findByText('Launch Plan')).toBeInTheDocument();
+    const link = await screen.findByRole('link', { name: /launch plan/i });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/projects/1');
   });
 
   it('creates a project and adds it to the list', async () => {
@@ -60,7 +67,11 @@ describe('Projects page', () => {
       },
     });
 
-    render(<Projects />);
+    render(
+      <MemoryRouter>
+        <Projects />
+      </MemoryRouter>
+    );
 
     await screen.findByText(/you have not created any projects yet/i);
 
@@ -78,7 +89,11 @@ describe('Projects page', () => {
   it('shows validation error for empty name', async () => {
     vi.mocked(projectsApi.list).mockResolvedValue({ data: [] });
 
-    render(<Projects />);
+    render(
+      <MemoryRouter>
+        <Projects />
+      </MemoryRouter>
+    );
 
     await screen.findByText(/you have not created any projects yet/i);
 
@@ -91,7 +106,11 @@ describe('Projects page', () => {
   it('shows empty state when there are no projects', async () => {
     vi.mocked(projectsApi.list).mockResolvedValue({ data: [] });
 
-    render(<Projects />);
+    render(
+      <MemoryRouter>
+        <Projects />
+      </MemoryRouter>
+    );
 
     expect(
       await screen.findByText(/you have not created any projects yet/i)
@@ -101,7 +120,11 @@ describe('Projects page', () => {
   it('logs out on unauthorized list response', async () => {
     vi.mocked(projectsApi.list).mockRejectedValue(new ApiRequestError(401, 'Not authenticated'));
 
-    render(<Projects />);
+    render(
+      <MemoryRouter>
+        <Projects />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(mockLogout).toHaveBeenCalled();
@@ -112,7 +135,11 @@ describe('Projects page', () => {
     vi.mocked(projectsApi.list).mockResolvedValue({ data: [] });
     vi.mocked(projectsApi.create).mockRejectedValue(new ApiRequestError(403, 'Forbidden'));
 
-    render(<Projects />);
+    render(
+      <MemoryRouter>
+        <Projects />
+      </MemoryRouter>
+    );
 
     await screen.findByText(/you have not created any projects yet/i);
 
