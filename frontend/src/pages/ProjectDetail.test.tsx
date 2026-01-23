@@ -32,18 +32,25 @@ vi.mock('../api/client', async () => {
       update: vi.fn(),
       delete: vi.fn(),
     },
+    tasksApi: {
+      list: vi.fn(),
+      create: vi.fn(),
+    },
   };
 });
 
-import { ApiRequestError, projectsApi } from '../api/client';
+import { ApiRequestError, projectsApi, tasksApi } from '../api/client';
 
 describe('ProjectDetail page', () => {
   beforeEach(() => {
     vi.mocked(projectsApi.get).mockReset();
     vi.mocked(projectsApi.update).mockReset();
     vi.mocked(projectsApi.delete).mockReset();
+    vi.mocked(tasksApi.list).mockReset();
+    vi.mocked(tasksApi.create).mockReset();
     mockLogout.mockReset();
     mockNavigate.mockReset();
+    vi.mocked(tasksApi.list).mockResolvedValue({ data: [] });
   });
 
   const renderWithRoute = (id: string) =>
@@ -165,7 +172,7 @@ describe('ProjectDetail page', () => {
     const editButton = await screen.findByRole('button', { name: /edit/i });
     await user.click(editButton);
 
-    expect(screen.getByRole('textbox')).toBeInTheDocument();
+    expect(screen.getByLabelText(/project name/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
   });
@@ -196,7 +203,7 @@ describe('ProjectDetail page', () => {
     const editButton = await screen.findByRole('button', { name: /edit/i });
     await user.click(editButton);
 
-    const input = screen.getByRole('textbox');
+    const input = screen.getByLabelText(/project name/i);
     await user.clear(input);
     await user.type(input, 'Updated Plan');
 
@@ -208,7 +215,7 @@ describe('ProjectDetail page', () => {
     });
 
     expect(await screen.findByText('Updated Plan')).toBeInTheDocument();
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/project name/i)).not.toBeInTheDocument();
   });
 
   it('shows validation error for empty name', async () => {
@@ -228,7 +235,7 @@ describe('ProjectDetail page', () => {
     const editButton = await screen.findByRole('button', { name: /edit/i });
     await user.click(editButton);
 
-    const input = screen.getByRole('textbox');
+    const input = screen.getByLabelText(/project name/i);
     await user.clear(input);
 
     const saveButton = screen.getByRole('button', { name: /save/i });
@@ -255,14 +262,14 @@ describe('ProjectDetail page', () => {
     const editButton = await screen.findByRole('button', { name: /edit/i });
     await user.click(editButton);
 
-    const input = screen.getByRole('textbox');
+    const input = screen.getByLabelText(/project name/i);
     await user.clear(input);
     await user.type(input, 'Changed Name');
 
     const cancelButton = screen.getByRole('button', { name: /cancel/i });
     await user.click(cancelButton);
 
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/project name/i)).not.toBeInTheDocument();
     expect(screen.getByText('Launch Plan')).toBeInTheDocument();
     expect(projectsApi.update).not.toHaveBeenCalled();
   });
@@ -443,5 +450,371 @@ describe('ProjectDetail page', () => {
     expect(mockNavigate).not.toHaveBeenCalled();
 
     confirmSpy.mockRestore();
+  });
+
+  // Story 3.1: Tasks list + create
+
+  it('renders task list', async () => {
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: false,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+
+    renderWithRoute('1');
+
+    expect(await screen.findByText('Design flows')).toBeInTheDocument();
+  });
+
+  it('creates a task and adds it to the list', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({ data: [] });
+    vi.mocked(tasksApi.create).mockResolvedValue({
+      data: {
+        id: 11,
+        title: 'Write tests',
+        is_complete: false,
+        project_id: 1,
+        created_at: '2026-01-23T00:00:00Z',
+        updated_at: '2026-01-23T00:00:00Z',
+      },
+    });
+
+    renderWithRoute('1');
+
+    const input = await screen.findByPlaceholderText(/new task title/i);
+    await user.type(input, 'Write tests');
+
+    const addButton = screen.getByRole('button', { name: /add task/i });
+    await user.click(addButton);
+
+    await waitFor(() => {
+      expect(tasksApi.create).toHaveBeenCalledWith(1, { title: 'Write tests' });
+    });
+
+    expect(await screen.findByText('Write tests')).toBeInTheDocument();
+  });
+
+  it('prevents duplicate task submissions while creating', async () => {
+    const user = userEvent.setup();
+    let resolveCreate: (value: { data: unknown }) => void;
+    const createPromise = new Promise<{ data: unknown }>((resolve) => {
+      resolveCreate = resolve;
+    });
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({ data: [] });
+    vi.mocked(tasksApi.create).mockReturnValue(createPromise);
+
+    renderWithRoute('1');
+
+    const input = await screen.findByPlaceholderText(/new task title/i);
+    await user.type(input, 'Dedup task');
+
+    const addButton = screen.getByRole('button', { name: /add task/i });
+    await user.click(addButton);
+    await user.click(addButton);
+
+    expect(tasksApi.create).toHaveBeenCalledTimes(1);
+
+    resolveCreate!({ data: { id: 99 } });
+  });
+
+  it('shows validation error for empty task title', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({ data: [] });
+
+    renderWithRoute('1');
+
+    const input = await screen.findByPlaceholderText(/new task title/i);
+    await user.clear(input);
+
+    const addButton = screen.getByRole('button', { name: /add task/i });
+    await user.click(addButton);
+
+    expect(await screen.findByText(/task title is required/i)).toBeInTheDocument();
+    expect(tasksApi.create).not.toHaveBeenCalled();
+  });
+
+  it('shows validation error for too long task title', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({ data: [] });
+
+    renderWithRoute('1');
+
+    const input = await screen.findByPlaceholderText(/new task title/i);
+    await user.type(input, 'x'.repeat(201));
+
+    const addButton = screen.getByRole('button', { name: /add task/i });
+    await user.click(addButton);
+
+    expect(
+      await screen.findByText(/200 characters or less/i)
+    ).toBeInTheDocument();
+    expect(tasksApi.create).not.toHaveBeenCalled();
+  });
+
+  it('shows validation error when task create returns 422', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({ data: [] });
+    vi.mocked(tasksApi.create).mockRejectedValue(
+      new ApiRequestError(422, 'Validation error')
+    );
+
+    renderWithRoute('1');
+
+    const input = await screen.findByPlaceholderText(/new task title/i);
+    await user.type(input, 'Bad title');
+
+    const addButton = screen.getByRole('button', { name: /add task/i });
+    await user.click(addButton);
+
+    expect(await screen.findByText(/validation error/i)).toBeInTheDocument();
+  });
+
+  it('shows empty state when no tasks exist', async () => {
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({ data: [] });
+
+    renderWithRoute('1');
+
+    expect(
+      await screen.findByText(/no tasks yet/i)
+    ).toBeInTheDocument();
+  });
+
+  it('shows tasks loading state', async () => {
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockReturnValue(new Promise(() => undefined));
+
+    renderWithRoute('1');
+
+    expect(await screen.findByText(/loading tasks/i)).toBeInTheDocument();
+  });
+
+  it('shows error when tasks list returns 403', async () => {
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockRejectedValue(
+      new ApiRequestError(403, 'Forbidden')
+    );
+
+    renderWithRoute('1');
+
+    expect(
+      await screen.findByText(/permission to view tasks/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/no tasks yet/i)).not.toBeInTheDocument();
+  });
+
+  it('logs out when tasks list returns 401', async () => {
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockRejectedValue(
+      new ApiRequestError(401, 'Not authenticated')
+    );
+
+    renderWithRoute('1');
+
+    await waitFor(() => {
+      expect(mockLogout).toHaveBeenCalled();
+    });
+  });
+
+  it('shows error when tasks list returns 404', async () => {
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockRejectedValue(
+      new ApiRequestError(404, 'Project not found')
+    );
+
+    renderWithRoute('1');
+
+    expect(
+      await screen.findByText(/project not found/i)
+    ).toBeInTheDocument();
+  });
+
+  it('shows error when task create returns 403', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({ data: [] });
+    vi.mocked(tasksApi.create).mockRejectedValue(
+      new ApiRequestError(403, 'Forbidden')
+    );
+
+    renderWithRoute('1');
+
+    const input = await screen.findByPlaceholderText(/new task title/i);
+    await user.type(input, 'Blocked task');
+
+    const addButton = screen.getByRole('button', { name: /add task/i });
+    await user.click(addButton);
+
+    expect(
+      await screen.findByText(/permission to create tasks/i)
+    ).toBeInTheDocument();
+  });
+
+  it('shows error when task create returns 404', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({ data: [] });
+    vi.mocked(tasksApi.create).mockRejectedValue(
+      new ApiRequestError(404, 'Project not found')
+    );
+
+    renderWithRoute('1');
+
+    const input = await screen.findByPlaceholderText(/new task title/i);
+    await user.type(input, 'Missing task');
+
+    const addButton = screen.getByRole('button', { name: /add task/i });
+    await user.click(addButton);
+
+    expect(
+      await screen.findByText(/project not found/i)
+    ).toBeInTheDocument();
+  });
+
+  it('logs out when task create returns 401', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({ data: [] });
+    vi.mocked(tasksApi.create).mockRejectedValue(
+      new ApiRequestError(401, 'Not authenticated')
+    );
+
+    renderWithRoute('1');
+
+    const input = await screen.findByPlaceholderText(/new task title/i);
+    await user.type(input, 'Logout task');
+
+    const addButton = screen.getByRole('button', { name: /add task/i });
+    await user.click(addButton);
+
+    await waitFor(() => {
+      expect(mockLogout).toHaveBeenCalled();
+    });
   });
 });

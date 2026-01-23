@@ -1,7 +1,8 @@
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import config
 from ..database import get_db
@@ -32,11 +33,19 @@ router = APIRouter()
 _login_rate_limit: dict[tuple[str, str], list[datetime]] = {}
 
 
+def _ensure_aware(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
+
+
 @router.post("/register", response_model=UserDataResponse, status_code=status.HTTP_201_CREATED)
-def register(user_data: UserCreate, db: Session = Depends(get_db)):
+async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     """Register a new user."""
     # Check if email already exists
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    existing_user = await db.scalar(select(User).where(User.email == user_data.email))
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -49,34 +58,40 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
     db.add(new_user)
     try:
-        db.commit()
+        await db.commit()
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    db.refresh(new_user)
+    await db.refresh(new_user)
 
     return UserDataResponse(data=UserResponse.model_validate(new_user))
 
 
 @router.post("/login", response_model=LoginDataResponse)
-def login(credentials: LoginRequest, request: Request, db: Session = Depends(get_db)):
+async def login(
+    credentials: LoginRequest, request: Request, db: AsyncSession = Depends(get_db)
+):
     """Authenticate user and return JWT token."""
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = datetime.now(timezone.utc)
     client_ip = request.client.host if request.client else "unknown"
     rate_key = (client_ip, credentials.email)
     attempts = _login_rate_limit.get(rate_key, [])
     attempts = [ts for ts in attempts if (now - ts).total_seconds() < config.LOGIN_RATE_LIMIT_WINDOW_SECONDS]
+    # Clean up empty entries to prevent unbounded memory growth
+    if not attempts and rate_key in _login_rate_limit:
+        del _login_rate_limit[rate_key]
     if len(attempts) >= config.LOGIN_RATE_LIMIT_MAX_ATTEMPTS:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many login attempts. Try again later."
         )
 
-    user = db.query(User).filter(User.email == credentials.email).first()
-    if user and user.locked_until and user.locked_until > now:
+    user = await db.scalar(select(User).where(User.email == credentials.email))
+    locked_until = _ensure_aware(user.locked_until) if user else None
+    if locked_until and locked_until > now:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is temporarily locked. Try again later."
@@ -94,11 +109,15 @@ def login(credentials: LoginRequest, request: Request, db: Session = Depends(get
             if user.failed_login_attempts >= config.LOGIN_LOCKOUT_THRESHOLD:
                 user.locked_until = now + timedelta(minutes=config.LOGIN_LOCKOUT_MINUTES)
             db.add(user)
-            db.commit()
+            await db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
+
+    # Successful login - clean up rate limit entry to free memory
+    if rate_key in _login_rate_limit:
+        del _login_rate_limit[rate_key]
 
     user.failed_login_attempts = 0
     user.locked_until = None
@@ -111,7 +130,7 @@ def login(credentials: LoginRequest, request: Request, db: Session = Depends(get
     user.refresh_token_hash = hash_refresh_token(refresh_token)
     user.refresh_token_expires_at = refresh_expires
     db.add(user)
-    db.commit()
+    await db.commit()
     response = LoginResponse(
         access_token=access_token,
         refresh_token=refresh_token,
@@ -122,21 +141,24 @@ def login(credentials: LoginRequest, request: Request, db: Session = Depends(get
 
 
 @router.post("/refresh", response_model=RefreshDataResponse)
-def refresh_token(payload: RefreshRequest, db: Session = Depends(get_db)):
+async def refresh_token(payload: RefreshRequest, db: AsyncSession = Depends(get_db)):
     """Rotate refresh token and issue new access token."""
     token_hash = hash_refresh_token(payload.refresh_token)
-    user = db.query(User).filter(User.refresh_token_hash == token_hash).first()
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    user = await db.scalar(
+        select(User).where(User.refresh_token_hash == token_hash)
+    )
+    now = datetime.now(timezone.utc)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token"
         )
-    if user.refresh_token_expires_at and user.refresh_token_expires_at < now:
+    refresh_expires = _ensure_aware(user.refresh_token_expires_at)
+    if refresh_expires and refresh_expires < now:
         user.refresh_token_hash = None
         user.refresh_token_expires_at = None
         db.add(user)
-        db.commit()
+        await db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token expired"
@@ -152,7 +174,7 @@ def refresh_token(payload: RefreshRequest, db: Session = Depends(get_db)):
     user.refresh_token_hash = hash_refresh_token(new_refresh_token)
     user.refresh_token_expires_at = refresh_expires
     db.add(user)
-    db.commit()
+    await db.commit()
 
     response = RefreshResponse(
         access_token=access_token,
@@ -163,19 +185,21 @@ def refresh_token(payload: RefreshRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-def logout(payload: RefreshRequest, db: Session = Depends(get_db)):
+async def logout(payload: RefreshRequest, db: AsyncSession = Depends(get_db)):
     """Revoke refresh token."""
     token_hash = hash_refresh_token(payload.refresh_token)
-    user = db.query(User).filter(User.refresh_token_hash == token_hash).first()
+    user = await db.scalar(
+        select(User).where(User.refresh_token_hash == token_hash)
+    )
     if user:
         user.refresh_token_hash = None
         user.refresh_token_expires_at = None
         db.add(user)
-        db.commit()
+        await db.commit()
     return None
 
 
 @router.get("/me", response_model=UserPublicDataResponse)
-def get_me(current_user: User = Depends(get_current_user)):
+async def get_me(current_user: User = Depends(get_current_user)):
     """Return the current authenticated user."""
     return UserPublicDataResponse(data=UserPublicResponse.model_validate(current_user))
