@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class ProjectCreate(BaseModel):
-    name: str = Field(min_length=1)
+    name: str = Field(min_length=1, max_length=100)
 
     @field_validator("name")
     @classmethod
@@ -16,7 +16,7 @@ class ProjectCreate(BaseModel):
 
 
 class ProjectUpdate(BaseModel):
-    name: str = Field(min_length=1)
+    name: str = Field(min_length=1, max_length=100)
 
     @field_validator("name")
     @classmethod
