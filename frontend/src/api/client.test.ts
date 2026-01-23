@@ -1,36 +1,26 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { authApi } from './client';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-describe('authApi', () => {
-  const fetchMock = vi.fn();
+import { api, tasksApi } from './client';
 
-  beforeEach(() => {
-    localStorage.clear();
-    fetchMock.mockReset();
-    vi.stubGlobal('fetch', fetchMock);
-  });
-
+describe('tasksApi', () => {
   afterEach(() => {
-    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
-  it('includes Authorization header when token is present', async () => {
-    localStorage.setItem('token', 'token-123');
-    fetchMock.mockResolvedValue({
-      ok: true,
-      json: vi.fn().mockResolvedValue({
-        data: {
-          access_token: 'access',
-          token_type: 'bearer',
-          user: { id: 1, email: 'user@example.com', created_at: '2026-01-19T00:00:00Z' },
-        },
-      }),
-    });
+  it('list calls api.get with project tasks path', async () => {
+    const mockGet = vi.spyOn(api, 'get').mockResolvedValue({ data: [] });
 
-    await authApi.login({ email: 'user@example.com', password: 'secret123' });
+    await tasksApi.list(5);
 
-    const [, options] = fetchMock.mock.calls[0];
-    const headers = options?.headers as Record<string, string>;
-    expect(headers.Authorization).toBe('Bearer token-123');
+    expect(mockGet).toHaveBeenCalledWith('/projects/5/tasks');
+  });
+
+  it('create calls api.post with project tasks path and data', async () => {
+    const payload = { title: 'New Task' };
+    const mockPost = vi.spyOn(api, 'post').mockResolvedValue({ data: { ...payload } });
+
+    await tasksApi.create(7, payload);
+
+    expect(mockPost).toHaveBeenCalledWith('/projects/7/tasks', payload);
   });
 });

@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import time
@@ -8,8 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 
-from .routers import auth_router, projects_router
-from .models import Project
+from .routers import auth_router, projects_router, tasks_router
+from .models import Project, Task
 from . import database as db
 from .config import FRONTEND_URLS
 
@@ -17,7 +18,7 @@ logger = logging.getLogger("taskforge.api")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_db()
+    await init_db()
     yield
 
 
@@ -54,31 +55,31 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(projects_router, prefix="/api", tags=["projects"])
+app.include_router(tasks_router, prefix="/api", tags=["tasks"])
 
-def init_db(max_attempts: int = 10, delay_seconds: float = 1.0) -> None:
+async def init_db(max_attempts: int = 10, delay_seconds: float = 1.0) -> None:
     """Initialize database tables with a simple retry for container startup."""
     last_error = None
     for _ in range(max_attempts):
         try:
-            db.Base.metadata.create_all(bind=db.engine)
+            async with db.engine.begin() as conn:
+                await conn.run_sync(db.Base.metadata.create_all)
             return
-        except OperationalError as exc:
+        except (OperationalError, OSError) as exc:
             last_error = exc
-            time.sleep(delay_seconds)
+            await asyncio.sleep(delay_seconds)
     if last_error:
         raise last_error
 
 
 @app.get("/api/health")
-def health_check():
-    session = db.SessionLocal()
-    try:
-        session.execute(text("SELECT 1"))
-    except OperationalError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Database unavailable",
-        ) from exc
-    finally:
-        session.close()
+async def health_check():
+    async with db.SessionLocal() as session:
+        try:
+            await session.execute(text("SELECT 1"))
+        except (OperationalError, OSError) as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Database unavailable",
+            ) from exc
     return {"status": "healthy"}

@@ -1,6 +1,6 @@
 # Story 3.1: View Tasks & Create
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -21,66 +21,66 @@ So that **I can track my work**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Task Database Model** (AC: 1, 2, 3)
-  - [ ] Create `backend/app/models/task.py` with Task model
-  - [ ] Add fields: id, title, is_complete (default False), project_id (FK), created_at, updated_at
-  - [ ] Add relationship to Project model
-  - [ ] Update Project model with tasks relationship (back_populates)
-  - [ ] Export from `backend/app/models/__init__.py`
-  - [ ] Create tasks table (auto-create via SQLAlchemy)
+- [x] **Task 1: Task Database Model** (AC: 1, 2, 3)
+  - [x] Create `backend/app/models/task.py` with Task model
+  - [x] Add fields: id, title, is_complete (default False), project_id (FK), created_at, updated_at
+  - [x] Add relationship to Project model
+  - [x] Update Project model with tasks relationship (back_populates)
+  - [x] Export from `backend/app/models/__init__.py`
+  - [x] Create tasks table (auto-create via SQLAlchemy)
 
-- [ ] **Task 2: Task Schemas** (AC: 2, 7)
-  - [ ] Create `backend/app/schemas/task.py`
-  - [ ] Add `TaskCreate` schema (title: str, min_length=1, strip whitespace)
-  - [ ] Add `TaskResponse` schema (id, title, is_complete, project_id, created_at, updated_at)
-  - [ ] Add `TaskListResponse` and `TaskDataResponse` for API response wrapper
-  - [ ] Export from `backend/app/schemas/__init__.py`
+- [x] **Task 2: Task Schemas** (AC: 2, 7)
+  - [x] Create `backend/app/schemas/task.py`
+  - [x] Add `TaskCreate` schema (title: str, min_length=1, strip whitespace)
+  - [x] Add `TaskResponse` schema (id, title, is_complete, project_id, created_at, updated_at)
+  - [x] Add `TaskListResponse` and `TaskDataResponse` for API response wrapper
+  - [x] Export from `backend/app/schemas/__init__.py`
 
-- [ ] **Task 3: Tasks API Router** (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] Create `backend/app/routers/tasks.py`
-  - [ ] Implement `GET /api/projects/{project_id}/tasks` - list tasks for project
-  - [ ] Implement `POST /api/projects/{project_id}/tasks` - create task in project
-  - [ ] Use `get_current_user` dependency for authentication
-  - [ ] Verify project exists (404 if not)
-  - [ ] Verify project ownership (403 if not owner)
-  - [ ] Register router in `backend/app/main.py`
+- [x] **Task 3: Tasks API Router** (AC: 1, 2, 3, 4, 5, 6)
+  - [x] Create `backend/app/routers/tasks.py`
+  - [x] Implement `GET /api/projects/{project_id}/tasks` - list tasks for project
+  - [x] Implement `POST /api/projects/{project_id}/tasks` - create task in project
+  - [x] Use `get_current_user` dependency for authentication
+  - [x] Verify project exists (404 if not)
+  - [x] Verify project ownership (403 if not owner)
+  - [x] Register router in `backend/app/main.py`
 
-- [ ] **Task 4: Backend Testing** (AC: 1, 2, 3, 4, 5, 6, 7)
-  - [ ] Create `backend/tests/api/test_tasks_api.py`
-  - [ ] Test: GET /projects/{id}/tasks returns empty list for project with no tasks
-  - [ ] Test: POST /projects/{id}/tasks creates task with is_complete=false
-  - [ ] Test: GET /projects/{id}/tasks returns tasks for project
-  - [ ] Test: POST /projects/{id}/tasks with empty title returns 422
-  - [ ] Test: POST /projects/{id}/tasks with whitespace-only title returns 422
-  - [ ] Test: GET/POST returns 404 for non-existent project
-  - [ ] Test: GET/POST returns 403 for project not owned by user
-  - [ ] Test: GET/POST returns 401 for unauthenticated request
+- [x] **Task 4: Backend Testing** (AC: 1, 2, 3, 4, 5, 6, 7)
+  - [x] Create `backend/tests/api/test_tasks_api.py`
+  - [x] Test: GET /projects/{id}/tasks returns empty list for project with no tasks
+  - [x] Test: POST /projects/{id}/tasks creates task with is_complete=false
+  - [x] Test: GET /projects/{id}/tasks returns tasks for project
+  - [x] Test: POST /projects/{id}/tasks with empty title returns 422
+  - [x] Test: POST /projects/{id}/tasks with whitespace-only title returns 422
+  - [x] Test: GET/POST returns 404 for non-existent project
+  - [x] Test: GET/POST returns 403 for project not owned by user
+  - [x] Test: GET/POST returns 401 for unauthenticated request
 
-- [ ] **Task 5: Frontend API Client** (AC: 1, 2)
-  - [ ] Add `TaskData` interface to `frontend/src/api/client.ts`
-  - [ ] Add `CreateTaskData` interface
-  - [ ] Add `tasksApi` object with `list(projectId)` and `create(projectId, data)` methods
-  - [ ] Follow existing projectsApi pattern
+- [x] **Task 5: Frontend API Client** (AC: 1, 2)
+  - [x] Add `TaskData` interface to `frontend/src/api/client.ts`
+  - [x] Add `CreateTaskData` interface
+  - [x] Add `tasksApi` object with `list(projectId)` and `create(projectId, data)` methods
+  - [x] Follow existing projectsApi pattern
 
-- [ ] **Task 6: Tasks UI in ProjectDetail** (AC: 1, 2, 7, 8)
-  - [ ] Update `frontend/src/pages/ProjectDetail.tsx`
-  - [ ] Add state for tasks list, loading, error
-  - [ ] Fetch tasks on mount using project ID
-  - [ ] Display task list (title, completion status indicator)
-  - [ ] Add "Create Task" form with title input
-  - [ ] Show loading state while fetching
-  - [ ] Show empty state when no tasks exist
-  - [ ] Show validation error for empty title
-  - [ ] Handle 403/404 errors gracefully
-  - [ ] Style with Tailwind CSS matching existing design
+- [x] **Task 6: Tasks UI in ProjectDetail** (AC: 1, 2, 7, 8)
+  - [x] Update `frontend/src/pages/ProjectDetail.tsx`
+  - [x] Add state for tasks list, loading, error
+  - [x] Fetch tasks on mount using project ID
+  - [x] Display task list (title, completion status indicator)
+  - [x] Add "Create Task" form with title input
+  - [x] Show loading state while fetching
+  - [x] Show empty state when no tasks exist
+  - [x] Show validation error for empty title
+  - [x] Handle 403/404 errors gracefully
+  - [x] Style with Tailwind CSS matching existing design
 
-- [ ] **Task 7: Frontend Testing** (AC: 1, 2, 7, 8)
-  - [ ] Update `frontend/src/pages/ProjectDetail.test.tsx`
-  - [ ] Test: ProjectDetail renders task list
-  - [ ] Test: Create task form submits and adds task to list
-  - [ ] Test: Empty title shows validation error
-  - [ ] Test: Empty state displays when no tasks
-  - [ ] Test: Tasks loading state displays
+- [x] **Task 7: Frontend Testing** (AC: 1, 2, 7, 8)
+  - [x] Update `frontend/src/pages/ProjectDetail.test.tsx`
+  - [x] Test: ProjectDetail renders task list
+  - [x] Test: Create task form submits and adds task to list
+  - [x] Test: Empty title shows validation error
+  - [x] Test: Empty state displays when no tasks
+  - [x] Test: Tasks loading state displays
 
 ## Dev Notes
 
@@ -454,15 +454,47 @@ const handleCreateTask = async (e: React.FormEvent) => {
 
 ### Agent Model Used
 
-(To be filled by dev agent)
+GPT-5 (Codex CLI)
 
 ### Implementation Plan
 
-(To be filled by dev agent)
+- Add Task model + Project relationship, then validate with unit tests.
+- Add Task schemas with validation and unit tests.
+- Implement tasks router with list/create endpoints and API tests.
+- Add tasks API client helpers and unit tests.
+- Build tasks UI on ProjectDetail with list/create and error states, then extend tests.
 
 ### Completion Notes List
 
-(To be filled by dev agent)
+- Added Task model with project relationship and timestamps.
+- Added Task model unit tests and verified schema/relationships.
+- Tests: `python -m unittest backend.tests.unit.test_task_model`
+- Added Task schemas with validation and response wrappers.
+- Added Task schema unit tests for empty/whitespace titles.
+- Tests: `python -m unittest backend.tests.unit.test_task_schema`
+- Implemented tasks router list/create with auth + ownership checks.
+- Added tasks API tests for list/create and auth/ownership error cases.
+- Tests: `python -m unittest backend.tests.api.test_tasks_api`
+- Added tasks API client interfaces and list/create helpers.
+- Added tasks API client unit tests.
+- Tests: `npm test -- --run src/api/client.test.ts`
+- Added tasks UI with loading/empty/error states and create form.
+- Added ProjectDetail task UI tests for list/create/empty/loading.
+- Tests: `npm test -- --run src/pages/ProjectDetail.test.tsx`
+- Added API test to confirm task title trimming on create.
+- Added UI tests for tasks list/create 403/404 error handling.
+- Code review fixes: async task endpoints, deterministic task ordering, 422 create handling.
+- Tests: `python -m unittest backend.tests.api.test_tasks_api`
+- Tests: `npm test -- --run src/pages/ProjectDetail.test.tsx`
+- Code review fixes: threadpool for sync DB calls, stricter task title type validation, improved 422 UI message.
+- Migrated to async SQLAlchemy sessions across backend (auth/projects/tasks) and updated tests for async DB.
+- Fixed async test session expiration (expire_on_commit), corrected async delete usage, and updated UI tests/validation inputs.
+- Tests: `python -m unittest backend.tests.api.test_tasks_api`
+- Tests: `python -m unittest backend.tests.api.test_projects_api`
+- Tests: `python -m unittest backend.tests.api.test_auth_login_api backend.tests.api.test_auth_me_api backend.tests.api.test_auth_registration_api backend.tests.unit.test_auth_dependency backend.tests.unit.test_auth_login backend.tests.unit.test_auth_registration`
+- Tests: `scripts/windows/run-backend-tests.ps1`
+- Tests: `scripts/windows/run-frontend-tests.ps1`
+- Aligned model timestamps to timezone-aware columns and removed naive datetime conversions to fix asyncpg errors.
 
 ### File List
 
@@ -471,17 +503,48 @@ const handleCreateTask = async (e: React.FormEvent) => {
 - backend/app/schemas/task.py
 - backend/app/routers/tasks.py
 - backend/tests/api/test_tasks_api.py
+- backend/tests/unit/test_task_model.py
+- backend/tests/unit/test_task_schema.py
+- frontend/src/api/client.test.ts
 
 **To Modify:**
+- backend/app/config.py
+- backend/app/database.py
 - backend/app/models/__init__.py
+- backend/app/models/user.py
 - backend/app/models/project.py (add tasks relationship)
 - backend/app/schemas/__init__.py
 - backend/app/routers/__init__.py
+- backend/app/routers/auth.py
 - backend/app/main.py
+- backend/app/routers/projects.py
+- backend/app/utils/auth.py
+- backend/requirements.txt
+- .env.example
 - frontend/src/api/client.ts
 - frontend/src/pages/ProjectDetail.tsx
 - frontend/src/pages/ProjectDetail.test.tsx
+- backend/tests/api/test_auth_login_api.py
+- backend/tests/api/test_auth_me_api.py
+- backend/tests/api/test_auth_registration_api.py
+- backend/tests/api/test_projects_api.py
+- backend/tests/unit/test_auth_dependency.py
+- backend/tests/unit/test_auth_login.py
+- backend/tests/unit/test_auth_registration.py
+- _bmad-output/implementation-artifacts/3-1-view-tasks-create.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
 
 ### Change Log
 
-(To be filled by dev agent)
+- 2026-01-23: Implemented Task model and relationships; added unit tests.
+- 2026-01-23: Added Task schemas with validation and unit tests.
+- 2026-01-23: Added tasks API router with list/create endpoints and tests.
+- 2026-01-23: Added tasks API client helpers with unit tests.
+- 2026-01-23: Added tasks UI on ProjectDetail with list/create flow and tests.
+- 2026-01-23: Added task trim API test and tasks 403/404 UI error tests.
+- 2026-01-23: Code review fixes: async task endpoints, ordered list, 422 handling.
+- 2026-01-23: Reinstated async task endpoints per project rules; updated story file list.
+- 2026-01-23: Added threadpool usage for sync DB calls, stricter task title type validation, and 422 UI message update.
+- 2026-01-23: Migrated backend DB stack to async (asyncpg/aiosqlite) and updated auth/projects/tasks code + tests.
+- 2026-01-23: Fixed async test session expiration, corrected async delete handling, and aligned frontend task validation tests.
+- 2026-01-23: Fixed timezone-aware timestamps for Postgres asyncpg to prevent naive/aware datetime errors.

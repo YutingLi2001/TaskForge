@@ -117,6 +117,19 @@ export interface UpdateProjectData {
   name: string;
 }
 
+export interface TaskData {
+  id: number;
+  title: string;
+  is_complete: boolean;
+  project_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateTaskData {
+  title: string;
+}
+
 export const authApi = {
   register: (data: RegisterData) =>
     api.post<ApiResponse<UserData>>('/auth/register', data),
@@ -137,4 +150,11 @@ export const projectsApi = {
   update: (id: number, data: UpdateProjectData) =>
     api.put<ApiResponse<ProjectData>>(`/projects/${id}`, data),
   delete: (id: number) => api.delete<ApiResponse<ProjectData>>(`/projects/${id}`),
+};
+
+export const tasksApi = {
+  list: (projectId: number) =>
+    api.get<ApiResponse<TaskData[]>>(`/projects/${projectId}/tasks`),
+  create: (projectId: number, data: CreateTaskData) =>
+    api.post<ApiResponse<TaskData>>(`/projects/${projectId}/tasks`, data),
 };

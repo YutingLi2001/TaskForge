@@ -1,9 +1,9 @@
+import asyncio
 import unittest
 
 from fastapi import HTTPException
 from pydantic import ValidationError
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 from starlette.requests import Request
 
@@ -17,46 +17,64 @@ from backend.app.utils.auth import hash_password
 class AuthLoginTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.engine = create_engine(
-            "sqlite+pysqlite:///:memory:",
+        cls.engine = create_async_engine(
+            "sqlite+aiosqlite:///:memory:",
             connect_args={"check_same_thread": False},
             poolclass=StaticPool,
         )
-        cls.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=cls.engine)
-        Base.metadata.create_all(bind=cls.engine)
+        cls.SessionLocal = async_sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=cls.engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+        )
+        asyncio.run(cls._create_tables())
+
+    @classmethod
+    async def _create_tables(cls):
+        async with cls.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+    @classmethod
+    async def _drop_tables(cls):
+        async with cls.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
 
     @classmethod
     def tearDownClass(cls):
-        cls.engine.dispose()
+        asyncio.run(cls.engine.dispose())
 
     def setUp(self):
-        Base.metadata.drop_all(bind=self.engine)
-        Base.metadata.create_all(bind=self.engine)
-        self.db = self.SessionLocal()
+        asyncio.run(self._reset_db())
 
-    def tearDown(self):
-        self.db.close()
+    async def _reset_db(self):
+        await self._drop_tables()
+        await self._create_tables()
 
-    def _create_user(self, email: str, password: str) -> User:
+    async def _create_user(self, session: AsyncSession, email: str, password: str) -> User:
         user = User(
             email=email,
             hashed_password=hash_password(password),
             is_verified=True,
             is_active=True,
         )
-        self.db.add(user)
-        self.db.commit()
-        self.db.refresh(user)
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
         return user
 
     def _request(self) -> Request:
         return Request({"type": "http", "client": ("127.0.0.1", 12345)})
 
     def test_login_success_returns_token(self):
-        self._create_user("user@example.com", "secret123")
-        payload = LoginRequest(email="user@example.com", password="secret123")
+        async def run():
+            async with self.SessionLocal() as session:
+                await self._create_user(session, "user@example.com", "secret123")
+                payload = LoginRequest(email="user@example.com", password="secret123")
+                return await login(payload, request=self._request(), db=session)
 
-        response = login(payload, request=self._request(), db=self.db)
+        response = asyncio.run(run())
 
         self.assertEqual(response.data.user.email, "user@example.com")
         self.assertEqual(response.data.token_type, "bearer")
@@ -64,19 +82,25 @@ class AuthLoginTests(unittest.TestCase):
         self.assertTrue(response.data.refresh_token)
 
     def test_login_invalid_password(self):
-        self._create_user("user@example.com", "secret123")
-        payload = LoginRequest(email="user@example.com", password="wrongpass")
+        async def run():
+            async with self.SessionLocal() as session:
+                await self._create_user(session, "user@example.com", "secret123")
+                payload = LoginRequest(email="user@example.com", password="wrongpass")
+                return await login(payload, request=self._request(), db=session)
 
         with self.assertRaises(HTTPException) as ctx:
-            login(payload, request=self._request(), db=self.db)
+            asyncio.run(run())
 
         self.assertEqual(ctx.exception.status_code, 401)
 
     def test_login_invalid_email(self):
-        payload = LoginRequest(email="nope@example.com", password="secret123")
+        async def run():
+            async with self.SessionLocal() as session:
+                payload = LoginRequest(email="nope@example.com", password="secret123")
+                return await login(payload, request=self._request(), db=session)
 
         with self.assertRaises(HTTPException) as ctx:
-            login(payload, request=self._request(), db=self.db)
+            asyncio.run(run())
 
         self.assertEqual(ctx.exception.status_code, 401)
 

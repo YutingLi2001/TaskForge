@@ -1,12 +1,13 @@
+import asyncio
 import os
 import unittest
 from datetime import datetime, timedelta, timezone
 
-os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///:memory:")
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 from backend.app import database as db
@@ -17,58 +18,83 @@ from backend.app import config
 class AuthLoginApiTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.engine = create_engine(
-            "sqlite+pysqlite:///:memory:",
+        cls.engine = create_async_engine(
+            "sqlite+aiosqlite:///:memory:",
             connect_args={"check_same_thread": False},
             poolclass=StaticPool,
         )
         db.engine = cls.engine
-        db.SessionLocal = sessionmaker(
-            autocommit=False, autoflush=False, bind=cls.engine
+        db.SessionLocal = async_sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=cls.engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
         )
-        db.Base.metadata.create_all(bind=cls.engine)
+        asyncio.run(cls._create_tables())
 
-        def override_get_db():
-            session = db.SessionLocal()
-            try:
+        async def override_get_db():
+            async with db.SessionLocal() as session:
                 yield session
-            finally:
-                session.close()
 
         from backend.app import main
         from backend.app.models.user import User
+
         cls.User = User
         cls.auth_router = __import__("backend.app.routers.auth", fromlist=["auth"])
         main.app.dependency_overrides[get_db] = override_get_db
         cls.client = TestClient(main.app)
 
     @classmethod
+    async def _create_tables(cls):
+        async with cls.engine.begin() as conn:
+            await conn.run_sync(db.Base.metadata.create_all)
+
+    @classmethod
+    async def _drop_tables(cls):
+        async with cls.engine.begin() as conn:
+            await conn.run_sync(db.Base.metadata.drop_all)
+
+    @classmethod
     def tearDownClass(cls):
-        cls.engine.dispose()
+        asyncio.run(cls.engine.dispose())
 
     def setUp(self):
-        db.Base.metadata.drop_all(bind=self.engine)
-        db.Base.metadata.create_all(bind=self.engine)
+        asyncio.run(self._reset_db())
         self.auth_router._login_rate_limit.clear()
 
-    def _create_user(self, email: str, password: str, *, is_verified: bool = True, is_active: bool = True):
+    async def _reset_db(self):
+        await self._drop_tables()
+        await self._create_tables()
+
+    async def _create_user(
+        self,
+        session: AsyncSession,
+        email: str,
+        password: str,
+        *,
+        is_verified: bool = True,
+        is_active: bool = True,
+        locked_until: datetime | None = None,
+    ):
         from backend.app.utils.auth import hash_password
 
-        session = db.SessionLocal()
-        try:
-            user = self.User(
-                email=email,
-                hashed_password=hash_password(password),
-                is_verified=is_verified,
-                is_active=is_active,
-            )
-            session.add(user)
-            session.commit()
-        finally:
-            session.close()
+        user = self.User(
+            email=email,
+            hashed_password=hash_password(password),
+            is_verified=is_verified,
+            is_active=is_active,
+            locked_until=locked_until,
+        )
+        session.add(user)
+        await session.commit()
 
     def test_login_success(self):
-        self._create_user("user@example.com", "secret123")
+        async def setup():
+            async with db.SessionLocal() as session:
+                await self._create_user(session, "user@example.com", "secret123")
+
+        asyncio.run(setup())
         response = self.client.post(
             "/api/auth/login",
             json={"email": "user@example.com", "password": "secret123"},
@@ -82,7 +108,11 @@ class AuthLoginApiTests(unittest.TestCase):
         self.assertEqual(body["data"]["token_type"], "bearer")
 
     def test_login_invalid_credentials_returns_401(self):
-        self._create_user("user@example.com", "secret123")
+        async def setup():
+            async with db.SessionLocal() as session:
+                await self._create_user(session, "user@example.com", "secret123")
+
+        asyncio.run(setup())
         response = self.client.post(
             "/api/auth/login",
             json={"email": "user@example.com", "password": "wrongpass"},
@@ -100,7 +130,11 @@ class AuthLoginApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 422)
 
     def test_login_case_insensitive_and_trimmed_email(self):
-        self._create_user("user@example.com", "secret123")
+        async def setup():
+            async with db.SessionLocal() as session:
+                await self._create_user(session, "user@example.com", "secret123")
+
+        asyncio.run(setup())
         response = self.client.post(
             "/api/auth/login",
             json={"email": "  User@Example.com  ", "password": "secret123"},
@@ -110,7 +144,13 @@ class AuthLoginApiTests(unittest.TestCase):
         self.assertEqual(response.json()["data"]["user"]["email"], "user@example.com")
 
     def test_login_disabled_account(self):
-        self._create_user("user@example.com", "secret123", is_active=False)
+        async def setup():
+            async with db.SessionLocal() as session:
+                await self._create_user(
+                    session, "user@example.com", "secret123", is_active=False
+                )
+
+        asyncio.run(setup())
         response = self.client.post(
             "/api/auth/login",
             json={"email": "user@example.com", "password": "secret123"},
@@ -120,7 +160,13 @@ class AuthLoginApiTests(unittest.TestCase):
         self.assertEqual(response.json().get("detail"), "Account is disabled.")
 
     def test_login_unverified_account_allows_login(self):
-        self._create_user("user@example.com", "secret123", is_verified=False)
+        async def setup():
+            async with db.SessionLocal() as session:
+                await self._create_user(
+                    session, "user@example.com", "secret123", is_verified=False
+                )
+
+        asyncio.run(setup())
         response = self.client.post(
             "/api/auth/login",
             json={"email": "user@example.com", "password": "secret123"},
@@ -130,19 +176,17 @@ class AuthLoginApiTests(unittest.TestCase):
         self.assertFalse(response.json()["data"]["user"]["is_verified"])
 
     def test_login_locked_account(self):
-        session = db.SessionLocal()
-        try:
-            user = self.User(
-                email="user@example.com",
-                hashed_password=__import__("backend.app.utils.auth", fromlist=["hash_password"]).hash_password("secret123"),
-                is_verified=True,
-                is_active=True,
-                locked_until=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=5),
-            )
-            session.add(user)
-            session.commit()
-        finally:
-            session.close()
+        async def setup():
+            async with db.SessionLocal() as session:
+                locked_until = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=5)
+                await self._create_user(
+                    session,
+                    "user@example.com",
+                    "secret123",
+                    locked_until=locked_until,
+                )
+
+        asyncio.run(setup())
 
         response = self.client.post(
             "/api/auth/login",
@@ -150,7 +194,10 @@ class AuthLoginApiTests(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json().get("detail"), "Account is temporarily locked. Try again later.")
+        self.assertEqual(
+            response.json().get("detail"),
+            "Account is temporarily locked. Try again later.",
+        )
 
     def test_login_rate_limited(self):
         original_max = config.LOGIN_RATE_LIMIT_MAX_ATTEMPTS
@@ -169,10 +216,17 @@ class AuthLoginApiTests(unittest.TestCase):
             config.LOGIN_RATE_LIMIT_MAX_ATTEMPTS = original_max
 
         self.assertEqual(response.status_code, 429)
-        self.assertEqual(response.json().get("detail"), "Too many login attempts. Try again later.")
+        self.assertEqual(
+            response.json().get("detail"),
+            "Too many login attempts. Try again later.",
+        )
 
     def test_refresh_token_rotation_and_logout(self):
-        self._create_user("user@example.com", "secret123")
+        async def setup():
+            async with db.SessionLocal() as session:
+                await self._create_user(session, "user@example.com", "secret123")
+
+        asyncio.run(setup())
         login_response = self.client.post(
             "/api/auth/login",
             json={"email": "user@example.com", "password": "secret123"},
@@ -200,22 +254,28 @@ class AuthLoginApiTests(unittest.TestCase):
         self.assertEqual(refresh_after_logout.status_code, 401)
 
     def test_remember_me_extends_refresh_expiry(self):
-        self._create_user("user@example.com", "secret123")
+        async def setup():
+            async with db.SessionLocal() as session:
+                await self._create_user(session, "user@example.com", "secret123")
+
+        asyncio.run(setup())
         response = self.client.post(
             "/api/auth/login",
             json={"email": "user@example.com", "password": "secret123", "remember_me": True},
         )
         self.assertEqual(response.status_code, 200)
 
-        session = db.SessionLocal()
-        try:
-            user = session.query(self.User).filter(self.User.email == "user@example.com").first()
-            self.assertIsNotNone(user)
-            self.assertIsNotNone(user.refresh_token_expires_at)
-            delta = user.refresh_token_expires_at - datetime.now(timezone.utc).replace(tzinfo=None)
-            self.assertGreater(delta, timedelta(days=config.REMEMBER_ME_REFRESH_DAYS - 1))
-        finally:
-            session.close()
+        async def fetch_user():
+            async with db.SessionLocal() as session:
+                return await session.scalar(
+                    select(self.User).where(self.User.email == "user@example.com")
+                )
+
+        user = asyncio.run(fetch_user())
+        self.assertIsNotNone(user)
+        self.assertIsNotNone(user.refresh_token_expires_at)
+        delta = user.refresh_token_expires_at - datetime.now(timezone.utc).replace(tzinfo=None)
+        self.assertGreater(delta, timedelta(days=config.REMEMBER_ME_REFRESH_DAYS - 1))
 
 
 if __name__ == "__main__":

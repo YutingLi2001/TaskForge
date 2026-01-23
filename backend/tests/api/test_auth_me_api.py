@@ -1,12 +1,12 @@
+import asyncio
 import os
 import unittest
 from datetime import timedelta
 
-os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///:memory:")
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 from backend.app import database as db
@@ -16,58 +16,73 @@ from backend.app.database import get_db
 class AuthMeApiTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.engine = create_engine(
-            "sqlite+pysqlite:///:memory:",
+        cls.engine = create_async_engine(
+            "sqlite+aiosqlite:///:memory:",
             connect_args={"check_same_thread": False},
             poolclass=StaticPool,
         )
         db.engine = cls.engine
-        db.SessionLocal = sessionmaker(
-            autocommit=False, autoflush=False, bind=cls.engine
+        db.SessionLocal = async_sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=cls.engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
         )
-        db.Base.metadata.create_all(bind=cls.engine)
+        asyncio.run(cls._create_tables())
 
-        def override_get_db():
-            session = db.SessionLocal()
-            try:
+        async def override_get_db():
+            async with db.SessionLocal() as session:
                 yield session
-            finally:
-                session.close()
 
         from backend.app import main
         from backend.app.models.user import User
+
         cls.User = User
         main.app.dependency_overrides[get_db] = override_get_db
         cls.client = TestClient(main.app)
 
     @classmethod
+    async def _create_tables(cls):
+        async with cls.engine.begin() as conn:
+            await conn.run_sync(db.Base.metadata.create_all)
+
+    @classmethod
+    async def _drop_tables(cls):
+        async with cls.engine.begin() as conn:
+            await conn.run_sync(db.Base.metadata.drop_all)
+
+    @classmethod
     def tearDownClass(cls):
-        cls.engine.dispose()
+        asyncio.run(cls.engine.dispose())
 
     def setUp(self):
-        db.Base.metadata.drop_all(bind=self.engine)
-        db.Base.metadata.create_all(bind=self.engine)
+        asyncio.run(self._reset_db())
 
-    def _create_user(self, email: str, password: str):
+    async def _reset_db(self):
+        await self._drop_tables()
+        await self._create_tables()
+
+    async def _create_user(self, session: AsyncSession, email: str, password: str):
         from backend.app.utils.auth import hash_password
 
-        session = db.SessionLocal()
-        try:
-            user = self.User(
-                email=email,
-                hashed_password=hash_password(password),
-                is_verified=True,
-                is_active=True,
-            )
-            session.add(user)
-            session.commit()
-            session.refresh(user)
-            return user
-        finally:
-            session.close()
+        user = self.User(
+            email=email,
+            hashed_password=hash_password(password),
+            is_verified=True,
+            is_active=True,
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        return user
 
     def test_me_with_valid_token_returns_user(self):
-        user = self._create_user("user@example.com", "secret123")
+        async def setup():
+            async with db.SessionLocal() as session:
+                return await self._create_user(session, "user@example.com", "secret123")
+
+        user = asyncio.run(setup())
         from backend.app.utils.auth import create_access_token
 
         token = create_access_token({"sub": user.email})
@@ -98,7 +113,11 @@ class AuthMeApiTests(unittest.TestCase):
         self.assertEqual(response.json().get("detail"), "Could not validate credentials")
 
     def test_me_expired_token_returns_401(self):
-        self._create_user("user@example.com", "secret123")
+        async def setup():
+            async with db.SessionLocal() as session:
+                await self._create_user(session, "user@example.com", "secret123")
+
+        asyncio.run(setup())
         from backend.app.utils.auth import create_access_token
 
         token = create_access_token(

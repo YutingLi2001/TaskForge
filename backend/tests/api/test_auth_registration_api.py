@@ -1,11 +1,12 @@
+import asyncio
 import os
 import unittest
 
-os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///:memory:")
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 from backend.app import database as db
@@ -16,32 +17,46 @@ from backend.app.models.user import User
 class AuthRegistrationApiTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.engine = create_engine(
-            "sqlite+pysqlite:///:memory:",
+        cls.engine = create_async_engine(
+            "sqlite+aiosqlite:///:memory:",
             connect_args={"check_same_thread": False},
             poolclass=StaticPool,
         )
         db.engine = cls.engine
-        db.SessionLocal = sessionmaker(
-            autocommit=False, autoflush=False, bind=cls.engine
+        db.SessionLocal = async_sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=cls.engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
         )
-        db.Base.metadata.create_all(bind=cls.engine)
+        asyncio.run(cls._create_tables())
 
-        def override_get_db():
-            session = db.SessionLocal()
-            try:
+        async def override_get_db():
+            async with db.SessionLocal() as session:
                 yield session
-            finally:
-                session.close()
 
         from backend.app import main
 
         main.app.dependency_overrides[get_db] = override_get_db
         cls.client = TestClient(main.app)
 
+    @classmethod
+    async def _create_tables(cls):
+        async with cls.engine.begin() as conn:
+            await conn.run_sync(db.Base.metadata.create_all)
+
+    @classmethod
+    async def _drop_tables(cls):
+        async with cls.engine.begin() as conn:
+            await conn.run_sync(db.Base.metadata.drop_all)
+
     def setUp(self):
-        db.Base.metadata.drop_all(bind=self.engine)
-        db.Base.metadata.create_all(bind=self.engine)
+        asyncio.run(self._reset_db())
+
+    async def _reset_db(self):
+        await self._drop_tables()
+        await self._create_tables()
 
     def test_register_success(self):
         response = self.client.post(
@@ -55,17 +70,15 @@ class AuthRegistrationApiTests(unittest.TestCase):
         self.assertIn("id", body["data"])
         self.assertIn("created_at", body["data"])
 
-        session = db.SessionLocal()
-        try:
-            saved_user = (
-                session.query(User)
-                .filter(User.email == "user@example.com")
-                .first()
-            )
-            self.assertIsNotNone(saved_user)
-            self.assertNotEqual(saved_user.hashed_password, "secret123")
-        finally:
-            session.close()
+        async def fetch_user():
+            async with db.SessionLocal() as session:
+                return await session.scalar(
+                    select(User).where(User.email == "user@example.com")
+                )
+
+        saved_user = asyncio.run(fetch_user())
+        self.assertIsNotNone(saved_user)
+        self.assertNotEqual(saved_user.hashed_password, "secret123")
 
     def test_register_duplicate_email_returns_400(self):
         self.client.post(
