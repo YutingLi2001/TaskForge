@@ -29,12 +29,11 @@ export default function PublicRoute({ children }: PublicRouteProps) {
   const [status, setStatus] = useState<'checking' | 'guest' | 'authed'>(() => {
     return !token || !isTokenValid(token) ? 'guest' : 'checking';
   });
+  const tokenValid = isTokenValid(token);
+  const effectiveStatus = tokenValid ? status : 'guest';
 
   useEffect(() => {
-    if (!token || !isTokenValid(token)) {
-      setStatus('guest');
-      return;
-    }
+    if (!tokenValid) return;
     let active = true;
     authApi.me()
       .then(() => {
@@ -56,13 +55,13 @@ export default function PublicRoute({ children }: PublicRouteProps) {
     return () => {
       active = false;
     };
-  }, [token]);
+  }, [tokenValid]);
 
-  if (status === 'checking') {
+  if (effectiveStatus === 'checking') {
     return null;
   }
 
-  if (status === 'authed') {
+  if (effectiveStatus === 'authed') {
     return <Navigate to="/dashboard" replace />;
   }
 

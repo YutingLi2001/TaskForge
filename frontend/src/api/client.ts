@@ -130,6 +130,10 @@ export interface CreateTaskData {
   title: string;
 }
 
+export interface UpdateTaskData {
+  title: string;
+}
+
 export const authApi = {
   register: (data: RegisterData) =>
     api.post<ApiResponse<UserData>>('/auth/register', data),
@@ -157,4 +161,9 @@ export const tasksApi = {
     api.get<ApiResponse<TaskData[]>>(`/projects/${projectId}/tasks`),
   create: (projectId: number, data: CreateTaskData) =>
     api.post<ApiResponse<TaskData>>(`/projects/${projectId}/tasks`, data),
+  update: (projectId: number, taskId: number, data: UpdateTaskData) =>
+    api.put<ApiResponse<TaskData>>(
+      `/projects/${projectId}/tasks/${taskId}`,
+      data
+    ),
 };
