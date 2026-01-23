@@ -5,10 +5,21 @@ import userEvent from '@testing-library/user-event';
 import ProjectDetail from './ProjectDetail';
 
 const mockLogout = vi.fn();
+const mockNavigate = vi.fn();
 
 vi.mock('../hooks/useLogout', () => ({
   useLogout: () => ({ logout: mockLogout }),
 }));
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>(
+    'react-router-dom'
+  );
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 vi.mock('../api/client', async () => {
   const actual = await vi.importActual<typeof import('../api/client')>(
@@ -19,6 +30,7 @@ vi.mock('../api/client', async () => {
     projectsApi: {
       get: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
     },
   };
 });
@@ -29,7 +41,9 @@ describe('ProjectDetail page', () => {
   beforeEach(() => {
     vi.mocked(projectsApi.get).mockReset();
     vi.mocked(projectsApi.update).mockReset();
+    vi.mocked(projectsApi.delete).mockReset();
     mockLogout.mockReset();
+    mockNavigate.mockReset();
   });
 
   const renderWithRoute = (id: string) =>
@@ -131,6 +145,7 @@ describe('ProjectDetail page', () => {
     renderWithRoute('1');
 
     expect(await screen.findByRole('button', { name: /edit/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
   });
 
   it('toggles edit mode when edit button clicked', async () => {
@@ -250,5 +265,183 @@ describe('ProjectDetail page', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.getByText('Launch Plan')).toBeInTheDocument();
     expect(projectsApi.update).not.toHaveBeenCalled();
+  });
+
+  it('confirms delete, calls API, and navigates to projects', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(projectsApi.delete).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+
+    renderWithRoute('1');
+
+    const deleteButton = await screen.findByRole('button', { name: /delete/i });
+    await user.click(deleteButton);
+
+    await waitFor(() => {
+      expect(confirmSpy).toHaveBeenCalled();
+      expect(projectsApi.delete).toHaveBeenCalledWith(1);
+      expect(mockNavigate).toHaveBeenCalledWith('/projects');
+    });
+
+    confirmSpy.mockRestore();
+  });
+
+  it('cancels delete and does not call API', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+
+    renderWithRoute('1');
+
+    const deleteButton = await screen.findByRole('button', { name: /delete/i });
+    await user.click(deleteButton);
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(projectsApi.delete).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+
+    confirmSpy.mockRestore();
+  });
+
+  it('disables delete button while deleting', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    let resolveDelete: (value: { data: unknown }) => void;
+    const deletePromise = new Promise<{ data: unknown }>((resolve) => {
+      resolveDelete = resolve;
+    });
+
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(projectsApi.delete).mockReturnValue(deletePromise);
+
+    renderWithRoute('1');
+
+    const deleteButton = await screen.findByRole('button', { name: /delete/i });
+    await user.click(deleteButton);
+
+    await waitFor(() => {
+      expect(confirmSpy).toHaveBeenCalled();
+      expect(deleteButton).toBeDisabled();
+      expect(deleteButton).toHaveTextContent(/deleting/i);
+    });
+
+    resolveDelete!({ data: {} });
+    confirmSpy.mockRestore();
+  });
+
+  it('shows error when delete returns 403', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(projectsApi.delete).mockRejectedValue(
+      new ApiRequestError(403, 'Forbidden')
+    );
+
+    renderWithRoute('1');
+
+    const deleteButton = await screen.findByRole('button', { name: /delete/i });
+    await user.click(deleteButton);
+
+    expect(await screen.findByText(/permission to delete/i)).toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalled();
+
+    confirmSpy.mockRestore();
+  });
+
+  it('shows error when delete returns 404', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(projectsApi.delete).mockRejectedValue(
+      new ApiRequestError(404, 'Project not found')
+    );
+
+    renderWithRoute('1');
+
+    const deleteButton = await screen.findByRole('button', { name: /delete/i });
+    await user.click(deleteButton);
+
+    expect(await screen.findByText(/project not found/i)).toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalled();
+
+    confirmSpy.mockRestore();
+  });
+
+  it('logs out when delete returns 401', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(projectsApi.delete).mockRejectedValue(
+      new ApiRequestError(401, 'Not authenticated')
+    );
+
+    renderWithRoute('1');
+
+    const deleteButton = await screen.findByRole('button', { name: /delete/i });
+    await user.click(deleteButton);
+
+    await waitFor(() => {
+      expect(mockLogout).toHaveBeenCalled();
+    });
+    expect(mockNavigate).not.toHaveBeenCalled();
+
+    confirmSpy.mockRestore();
   });
 });

@@ -136,4 +136,5 @@ export const projectsApi = {
   get: (id: number) => api.get<ApiResponse<ProjectData>>(`/projects/${id}`),
   update: (id: number, data: UpdateProjectData) =>
     api.put<ApiResponse<ProjectData>>(`/projects/${id}`, data),
+  delete: (id: number) => api.delete<ApiResponse<ProjectData>>(`/projects/${id}`),
 };

@@ -72,3 +72,22 @@ def update_project(
     db.commit()
     db.refresh(project)
     return ProjectDataResponse(data=ProjectResponse.model_validate(project))
+
+
+@router.delete("/{project_id}", response_model=ProjectDataResponse)
+def delete_project(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if project.user_id != current_user.id:
+        raise HTTPException(
+            status_code=403, detail="Not authorized to access this project"
+        )
+    response_data = ProjectResponse.model_validate(project)
+    db.delete(project)
+    db.commit()
+    return ProjectDataResponse(data=response_data)

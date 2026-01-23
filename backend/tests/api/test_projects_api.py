@@ -344,6 +344,100 @@ class ProjectsApiTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 422)
 
+    # Story 2.4: Delete Project tests
+    def test_delete_project_removes_project_for_owner(self):
+        user = self._create_user("user@example.com", "secret123")
+        session = db.SessionLocal()
+        try:
+            project = self.Project(name="Delete Me", user_id=user.id)
+            session.add(project)
+            session.commit()
+            session.refresh(project)
+            project_id = project.id
+        finally:
+            session.close()
+
+        response = self.client.delete(
+            f"/api/projects/{project_id}",
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["data"]["id"], project_id)
+        self.assertEqual(body["data"]["name"], "Delete Me")
+        self.assertEqual(body["data"]["user_id"], user.id)
+        self.assertIn("created_at", body["data"])
+        self.assertIn("updated_at", body["data"])
+
+        session = db.SessionLocal()
+        try:
+            remaining = (
+                session.query(self.Project)
+                .filter(self.Project.id == project_id)
+                .first()
+            )
+        finally:
+            session.close()
+        self.assertIsNone(remaining)
+
+    def test_delete_project_returns_404_for_missing_project(self):
+        user = self._create_user("user@example.com", "secret123")
+        response = self.client.delete(
+            "/api/projects/9999",
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_delete_project_returns_404_when_already_deleted_ac8(self):
+        user = self._create_user("user@example.com", "secret123")
+        session = db.SessionLocal()
+        try:
+            project = self.Project(name="Delete Twice", user_id=user.id)
+            session.add(project)
+            session.commit()
+            session.refresh(project)
+            project_id = project.id
+        finally:
+            session.close()
+
+        response = self.client.delete(
+            f"/api/projects/{project_id}",
+            headers=self._auth_header_for(user.email),
+        )
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.delete(
+            f"/api/projects/{project_id}",
+            headers=self._auth_header_for(user.email),
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_delete_project_returns_403_for_non_owner(self):
+        owner = self._create_user("owner@example.com", "secret123")
+        other = self._create_user("other@example.com", "secret123")
+        session = db.SessionLocal()
+        try:
+            project = self.Project(name="Owner Project", user_id=owner.id)
+            session.add(project)
+            session.commit()
+            session.refresh(project)
+            project_id = project.id
+        finally:
+            session.close()
+
+        response = self.client.delete(
+            f"/api/projects/{project_id}",
+            headers=self._auth_header_for(other.email),
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_delete_project_returns_401_for_unauthenticated_request(self):
+        response = self.client.delete("/api/projects/1")
+        self.assertEqual(response.status_code, 401)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/Header';
 import { ApiRequestError, projectsApi } from '../api/client';
 import type { ProjectData } from '../api/client';
@@ -8,16 +8,19 @@ import { useLogout } from '../hooks/useLogout';
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const { logout } = useLogout();
+  const navigate = useNavigate();
   const userEmail = localStorage.getItem('user_email');
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editError, setEditError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -34,6 +37,7 @@ export default function ProjectDetail() {
         if (!active) return;
         setProject(response.data);
         setError(null);
+        setDeleteError(null);
       })
       .catch((err) => {
         if (!active) return;
@@ -67,6 +71,7 @@ export default function ProjectDetail() {
   const handleEdit = () => {
     setEditName(project?.name ?? '');
     setEditError(null);
+    setDeleteError(null);
     setIsEditing(true);
   };
 
@@ -109,6 +114,43 @@ export default function ProjectDetail() {
       setEditError(err instanceof Error ? err.message : 'Failed to update project');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!project) return;
+    if (deleting) return;
+    setDeleting(true);
+    const confirmed = window.confirm('Delete this project?');
+    if (!confirmed) {
+      setDeleting(false);
+      return;
+    }
+
+    setDeleteError(null);
+
+    try {
+      await projectsApi.delete(project.id);
+      setDeleteError(null);
+      navigate('/projects');
+    } catch (err) {
+      if (err instanceof ApiRequestError) {
+        if (err.status === 401) {
+          logout();
+          return;
+        }
+        if (err.status === 403) {
+          setDeleteError('You do not have permission to delete this project.');
+          return;
+        }
+        if (err.status === 404) {
+          setDeleteError('Project not found.');
+          return;
+        }
+      }
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete project');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -168,13 +210,24 @@ export default function ProjectDetail() {
               <>
                 <div className="flex items-start justify-between">
                   <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-                  <button
-                    type="button"
-                    onClick={handleEdit}
-                    className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    Edit
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleEdit}
+                      disabled={deleting}
+                      className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+                    >
+                      {deleting ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
                 </div>
                 <div className="mt-4 space-y-2 text-sm text-gray-600">
                   <p>
@@ -198,6 +251,9 @@ export default function ProjectDetail() {
                     })}
                   </p>
                 </div>
+                {deleteError ? (
+                  <p className="mt-4 text-sm text-red-600">{deleteError}</p>
+                ) : null}
               </>
             )}
           </section>
