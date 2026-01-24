@@ -24,6 +24,7 @@ export default function ProjectDetail() {
   const [editTaskTitle, setEditTaskTitle] = useState('');
   const [editTaskError, setEditTaskError] = useState<string | null>(null);
   const [savingTask, setSavingTask] = useState(false);
+  const [togglingTaskId, setTogglingTaskId] = useState<number | null>(null);
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -322,6 +323,40 @@ export default function ProjectDetail() {
     }
   };
 
+  const handleToggleTask = async (task: TaskData) => {
+    if (!project) return;
+    if (togglingTaskId === task.id) return;
+    setTogglingTaskId(task.id);
+    setTaskError(null);
+
+    try {
+      const response = await tasksApi.toggleStatus(project.id, task.id, {
+        is_complete: !task.is_complete,
+      });
+      setTasks((current) =>
+        current.map((item) => (item.id === task.id ? response.data : item))
+      );
+    } catch (err) {
+      if (err instanceof ApiRequestError) {
+        if (err.status === 401) {
+          logout();
+          return;
+        }
+        if (err.status === 403) {
+          setTaskError('You do not have permission to update this task.');
+          return;
+        }
+        if (err.status === 404) {
+          setTaskError('Task not found.');
+          return;
+        }
+      }
+      setTaskError(err instanceof Error ? err.message : 'Failed to update task');
+    } finally {
+      setTogglingTaskId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Header onLogout={logout} userEmail={userEmail} />
@@ -500,11 +535,23 @@ export default function ProjectDetail() {
                         </div>
                       ) : (
                         <>
-                          <span
-                            className={`h-3 w-3 rounded-full ${
-                              task.is_complete ? 'bg-green-500' : 'bg-gray-300'
-                            }`}
-                          />
+                          <button
+                            type="button"
+                            onClick={() => handleToggleTask(task)}
+                            disabled={togglingTaskId === task.id}
+                            className="flex h-5 w-5 items-center justify-center rounded border border-gray-300 transition hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                            aria-label={
+                              task.is_complete
+                                ? 'Mark task as incomplete'
+                                : 'Mark task as complete'
+                            }
+                          >
+                            {task.is_complete ? (
+                              <span className="h-3 w-3 rounded-full bg-green-500" />
+                            ) : (
+                              <span className="h-3 w-3 rounded-full bg-gray-300" />
+                            )}
+                          </button>
                           <span
                             className={
                               task.is_complete
@@ -517,7 +564,7 @@ export default function ProjectDetail() {
                           <button
                             type="button"
                             onClick={() => handleEditTask(task)}
-                            disabled={savingTask}
+                            disabled={savingTask || togglingTaskId === task.id}
                             className="ml-auto text-sm font-medium text-blue-600 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
                             aria-label={`Edit task ${task.title}`}
                           >

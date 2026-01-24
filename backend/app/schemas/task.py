@@ -31,6 +31,10 @@ class TaskUpdate(BaseModel):
         return trimmed
 
 
+class TaskStatusUpdate(BaseModel):
+    is_complete: bool
+
+
 class TaskResponse(BaseModel):
     id: int
     title: str
