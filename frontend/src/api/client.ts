@@ -184,4 +184,8 @@ export const tasksApi = {
       `/projects/${projectId}/tasks/${taskId}`,
       data
     ),
+  delete: (projectId: number, taskId: number) =>
+    api.delete<ApiResponse<TaskData>>(
+      `/projects/${projectId}/tasks/${taskId}`
+    ),
 };

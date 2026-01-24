@@ -105,3 +105,25 @@ async def toggle_task_status(
     await db.commit()
     await db.refresh(task)
     return TaskDataResponse(data=TaskResponse.model_validate(task))
+
+
+@router.delete("/{task_id}", response_model=TaskDataResponse)
+async def delete_task(
+    project_id: int,
+    task_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    project = await get_project_or_404(project_id, current_user, db)
+    task = await db.scalar(
+        select(Task).where(Task.id == task_id, Task.project_id == project.id)
+    )
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    task_response = TaskResponse.model_validate(task)
+
+    await db.delete(task)
+    await db.commit()
+
+    return TaskDataResponse(data=task_response)

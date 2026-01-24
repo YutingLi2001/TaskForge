@@ -23,4 +23,12 @@ describe('tasksApi', () => {
 
     expect(mockPost).toHaveBeenCalledWith('/projects/7/tasks', payload);
   });
+
+  it('delete calls api.delete with project task path', async () => {
+    const mockDelete = vi.spyOn(api, 'delete').mockResolvedValue({ data: {} });
+
+    await tasksApi.delete(9, 12);
+
+    expect(mockDelete).toHaveBeenCalledWith('/projects/9/tasks/12');
+  });
 });
