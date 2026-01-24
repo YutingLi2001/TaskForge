@@ -25,6 +25,7 @@ export default function ProjectDetail() {
   const [editTaskError, setEditTaskError] = useState<string | null>(null);
   const [savingTask, setSavingTask] = useState(false);
   const [togglingTaskId, setTogglingTaskId] = useState<number | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<number | null>(null);
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -357,6 +358,47 @@ export default function ProjectDetail() {
     }
   };
 
+  const handleDeleteTask = async (task: TaskData) => {
+    if (!project) return;
+    if (deletingTaskId === task.id) return;
+    setDeletingTaskId(task.id);
+
+    if (editingTaskId === task.id) {
+      handleCancelEditTask();
+    }
+
+    const confirmed = window.confirm(`Delete task "${task.title}"?`);
+    if (!confirmed) {
+      setDeletingTaskId(null);
+      return;
+    }
+
+    setTaskError(null);
+
+    try {
+      await tasksApi.delete(project.id, task.id);
+      setTasks((current) => current.filter((item) => item.id !== task.id));
+    } catch (err) {
+      if (err instanceof ApiRequestError) {
+        if (err.status === 401) {
+          logout();
+          return;
+        }
+        if (err.status === 403) {
+          setTaskError('You do not have permission to delete this task.');
+          return;
+        }
+        if (err.status === 404) {
+          setTaskError('Task not found.');
+          return;
+        }
+      }
+      setTaskError(err instanceof Error ? err.message : 'Failed to delete task');
+    } finally {
+      setDeletingTaskId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Header onLogout={logout} userEmail={userEmail} />
@@ -492,88 +534,103 @@ export default function ProjectDetail() {
                 </p>
               ) : (
                 <ul className="mt-4 space-y-2">
-                  {tasks.map((task) => (
-                    <li
-                      key={task.id}
-                      className="flex items-center gap-3 rounded-md border border-gray-200 px-4 py-3"
-                    >
-                      {editingTaskId === task.id ? (
-                        <div className="flex w-full flex-col gap-2">
-                          <div className="flex w-full items-center gap-2">
-                            <input
-                              type="text"
-                              value={editTaskTitle}
-                              onChange={(event) =>
-                                setEditTaskTitle(event.target.value)
-                              }
-                              className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                              disabled={savingTask}
-                              aria-label="Edit task title"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleSaveTask(task.id)}
-                              disabled={savingTask}
-                              className="rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                              {savingTask ? 'Saving...' : 'Save'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleCancelEditTask}
-                              disabled={savingTask}
-                              className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                              Cancel
-                            </button>
+                  {tasks.map((task) => {
+                    const isDeleting = deletingTaskId === task.id;
+                    const isToggling = togglingTaskId === task.id;
+                    const isDisabled = isDeleting || isToggling;
+
+                    return (
+                      <li
+                        key={task.id}
+                        className="flex items-center gap-3 rounded-md border border-gray-200 px-4 py-3"
+                      >
+                        {editingTaskId === task.id ? (
+                          <div className="flex w-full flex-col gap-2">
+                            <div className="flex w-full items-center gap-2">
+                              <input
+                                type="text"
+                                value={editTaskTitle}
+                                onChange={(event) =>
+                                  setEditTaskTitle(event.target.value)
+                                }
+                                className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                disabled={savingTask}
+                                aria-label="Edit task title"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleSaveTask(task.id)}
+                                disabled={savingTask}
+                                className="rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                              >
+                                {savingTask ? 'Saving...' : 'Save'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleCancelEditTask}
+                                disabled={savingTask}
+                                className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                            {editTaskError ? (
+                              <p className="text-sm text-red-600">
+                                {editTaskError}
+                              </p>
+                            ) : null}
                           </div>
-                          {editTaskError ? (
-                            <p className="text-sm text-red-600">
-                              {editTaskError}
-                            </p>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleTask(task)}
-                            disabled={togglingTaskId === task.id}
-                            className="flex h-5 w-5 items-center justify-center rounded border border-gray-300 transition hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-                            aria-label={
-                              task.is_complete
-                                ? 'Mark task as incomplete'
-                                : 'Mark task as complete'
-                            }
-                          >
-                            {task.is_complete ? (
-                              <span className="h-3 w-3 rounded-full bg-green-500" />
-                            ) : (
-                              <span className="h-3 w-3 rounded-full bg-gray-300" />
-                            )}
-                          </button>
-                          <span
-                            className={
-                              task.is_complete
-                                ? 'text-gray-500 line-through'
-                                : 'text-gray-900'
-                            }
-                          >
-                            {task.title}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleEditTask(task)}
-                            disabled={savingTask || togglingTaskId === task.id}
-                            className="ml-auto text-sm font-medium text-blue-600 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
-                            aria-label={`Edit task ${task.title}`}
-                          >
-                            Edit
-                          </button>
-                        </>
-                      )}
-                    </li>
-                  ))}
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleTask(task)}
+                              disabled={isDisabled}
+                              className="flex h-5 w-5 items-center justify-center rounded border border-gray-300 transition hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                              aria-label={
+                                task.is_complete
+                                  ? 'Mark task as incomplete'
+                                  : 'Mark task as complete'
+                              }
+                            >
+                              {task.is_complete ? (
+                                <span className="h-3 w-3 rounded-full bg-green-500" />
+                              ) : (
+                                <span className="h-3 w-3 rounded-full bg-gray-300" />
+                              )}
+                            </button>
+                            <span
+                              className={
+                                task.is_complete
+                                  ? 'text-gray-500 line-through'
+                                  : 'text-gray-900'
+                              }
+                            >
+                              {task.title}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleEditTask(task)}
+                              disabled={savingTask || isDisabled}
+                              className="ml-auto text-sm font-medium text-blue-600 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                              aria-label={`Edit task ${task.title}`}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteTask(task)}
+                              disabled={isDisabled}
+                              className="text-sm font-medium text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                              aria-label={`Delete task ${task.title}`}
+                            >
+                              {isDeleting ? 'Deleting...' : 'Delete'}
+                            </button>
+                          </>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>
