@@ -1,6 +1,6 @@
 # Story 3.3: Toggle Task Status
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -21,53 +21,53 @@ So that **I can track my progress**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Backend TaskStatusUpdate Schema** (AC: 1, 2)
-  - [ ] Add `TaskStatusUpdate` schema to `backend/app/schemas/task.py`
-  - [ ] Schema contains single field: `is_complete: bool`
-  - [ ] Export from `backend/app/schemas/__init__.py`
+- [x] **Task 1: Backend TaskStatusUpdate Schema** (AC: 1, 2)
+  - [x] Add `TaskStatusUpdate` schema to `backend/app/schemas/task.py`
+  - [x] Schema contains single field: `is_complete: bool`
+  - [x] Export from `backend/app/schemas/__init__.py`
 
-- [ ] **Task 2: Backend PATCH Endpoint** (AC: 1, 2, 5, 6, 7, 8)
-  - [ ] Add `PATCH /api/projects/{project_id}/tasks/{task_id}` endpoint to `backend/app/routers/tasks.py`
-  - [ ] Use `get_current_user` dependency for authentication
-  - [ ] Query project by ID, return 404 if not found
-  - [ ] Check project ownership, return 403 if not owner
-  - [ ] Query task by ID, return 404 if not found
-  - [ ] Verify task belongs to project (extra safety check)
-  - [ ] Update task `is_complete` and `updated_at` timestamp
-  - [ ] Return updated task data with 200
+- [x] **Task 2: Backend PATCH Endpoint** (AC: 1, 2, 5, 6, 7, 8)
+  - [x] Add `PATCH /api/projects/{project_id}/tasks/{task_id}` endpoint to `backend/app/routers/tasks.py`
+  - [x] Use `get_current_user` dependency for authentication
+  - [x] Query project by ID, return 404 if not found
+  - [x] Check project ownership, return 403 if not owner
+  - [x] Query task by ID, return 404 if not found
+  - [x] Verify task belongs to project (extra safety check)
+  - [x] Update task `is_complete` and `updated_at` timestamp
+  - [x] Return updated task data with 200
 
-- [ ] **Task 3: Backend Testing** (AC: 1, 2, 5, 6, 7, 8)
-  - [ ] Add tests to `backend/tests/api/test_tasks_api.py`
-  - [ ] Test: PATCH /projects/{pid}/tasks/{tid} toggles is_complete from false to true
-  - [ ] Test: PATCH /projects/{pid}/tasks/{tid} toggles is_complete from true to false
-  - [ ] Test: PATCH returns 404 for non-existent task
-  - [ ] Test: PATCH returns 404 for non-existent project
-  - [ ] Test: PATCH returns 403 for project not owned by user
-  - [ ] Test: PATCH returns 401 for unauthenticated request
-  - [ ] Test: PATCH returns 404 when task doesn't belong to specified project
+- [x] **Task 3: Backend Testing** (AC: 1, 2, 5, 6, 7, 8)
+  - [x] Add tests to `backend/tests/api/test_tasks_api.py`
+  - [x] Test: PATCH /projects/{pid}/tasks/{tid} toggles is_complete from false to true
+  - [x] Test: PATCH /projects/{pid}/tasks/{tid} toggles is_complete from true to false
+  - [x] Test: PATCH returns 404 for non-existent task
+  - [x] Test: PATCH returns 404 for non-existent project
+  - [x] Test: PATCH returns 403 for project not owned by user
+  - [x] Test: PATCH returns 401 for unauthenticated request
+  - [x] Test: PATCH returns 404 when task doesn't belong to specified project
 
-- [ ] **Task 4: Frontend API Client** (AC: 1, 2)
-  - [ ] Add `ToggleTaskStatusData` interface to `frontend/src/api/client.ts`
-  - [ ] Add `toggleStatus(projectId: number, taskId: number, data: ToggleTaskStatusData)` method to `tasksApi`
-  - [ ] Returns `ApiResponse<TaskData>`
+- [x] **Task 4: Frontend API Client** (AC: 1, 2)
+  - [x] Add `ToggleTaskStatusData` interface to `frontend/src/api/client.ts`
+  - [x] Add `toggleStatus(projectId: number, taskId: number, data: ToggleTaskStatusData)` method to `tasksApi`
+  - [x] Returns `ApiResponse<TaskData>`
 
-- [ ] **Task 5: Toggle UI for Tasks in ProjectDetail** (AC: 1, 2, 3, 4)
-  - [ ] Update `frontend/src/pages/ProjectDetail.tsx`
-  - [ ] Replace static status indicator with clickable checkbox/button
-  - [ ] On click, call `tasksApi.toggleStatus()` with opposite of current status
-  - [ ] Update local tasks state on successful toggle
-  - [ ] Show loading state during toggle (disable checkbox)
-  - [ ] Maintain visual distinction for completed tasks (strikethrough, gray text, green indicator)
-  - [ ] Handle 403/404 errors gracefully with error message
-  - [ ] Style with Tailwind CSS matching existing design
+- [x] **Task 5: Toggle UI for Tasks in ProjectDetail** (AC: 1, 2, 3, 4)
+  - [x] Update `frontend/src/pages/ProjectDetail.tsx`
+  - [x] Replace static status indicator with clickable checkbox/button
+  - [x] On click, call `tasksApi.toggleStatus()` with opposite of current status
+  - [x] Update local tasks state on successful toggle
+  - [x] Show loading state during toggle (disable checkbox)
+  - [x] Maintain visual distinction for completed tasks (strikethrough, gray text, green indicator)
+  - [x] Handle 403/404 errors gracefully with error message
+  - [x] Style with Tailwind CSS matching existing design
 
-- [ ] **Task 6: Frontend Testing** (AC: 1, 2, 3, 4)
-  - [ ] Update `frontend/src/pages/ProjectDetail.test.tsx`
-  - [ ] Test: Clicking checkbox toggles task from incomplete to complete
-  - [ ] Test: Clicking checkbox toggles task from complete to incomplete
-  - [ ] Test: Completed tasks display with strikethrough styling
-  - [ ] Test: Incomplete tasks display without strikethrough styling
-  - [ ] Test: Toggle error shows error message
+- [x] **Task 6: Frontend Testing** (AC: 1, 2, 3, 4)
+  - [x] Update `frontend/src/pages/ProjectDetail.test.tsx`
+  - [x] Test: Clicking checkbox toggles task from incomplete to complete
+  - [x] Test: Clicking checkbox toggles task from complete to incomplete
+  - [x] Test: Completed tasks display with strikethrough styling
+  - [x] Test: Incomplete tasks display without strikethrough styling
+  - [x] Test: Toggle error shows error message
 
 ## Dev Notes
 
@@ -320,7 +320,7 @@ const handleToggleTask = async (task: TaskData) => {
 
 ### Agent Model Used
 
-[To be filled by implementing agent]
+Codex (GPT-5)
 
 ### Implementation Plan
 
@@ -331,22 +331,36 @@ const handleToggleTask = async (task: TaskData) => {
 5. Add toggleStatus method to tasksApi.
 6. Implement task toggle UI with checkbox and loading state.
 7. Add frontend tests for toggle flows; run full test suite.
+8. Validate TaskStatusUpdate schema with unit tests before implementation.
 
 ### Completion Notes List
 
-[To be filled by implementing agent]
+- Added TaskStatusUpdate schema and export with test-first validation.
+- Added PATCH task toggle endpoint with ownership checks and timestamp update.
+- Added backend API tests for toggling task completion states and error cases.
+- Added frontend API patch helper and toggleStatus client method.
+- Implemented task toggle UI with loading state and error handling.
+- Added frontend tests for toggle flows and styling states.
+- Tests: `scripts/windows/run-backend-tests.ps1`, `scripts/windows/run-frontend-tests.ps1`.
+- Code review fixes: disabled edit during toggle; added in-flight toggle UI test.
+- Tests: `scripts/windows/run-frontend-tests.ps1` (2026-01-24).
 
 ### File List
 
-**To Modify:**
-- backend/app/schemas/task.py (add TaskStatusUpdate)
-- backend/app/schemas/__init__.py (export TaskStatusUpdate)
-- backend/app/routers/tasks.py (add PATCH endpoint)
-- backend/tests/api/test_tasks_api.py (add toggle tests)
-- frontend/src/api/client.ts (add patch helper and toggleStatus method)
-- frontend/src/pages/ProjectDetail.tsx (add toggle UI)
-- frontend/src/pages/ProjectDetail.test.tsx (add toggle tests)
+**Modified:**
+- frontend/src/api/client.ts
+- frontend/src/pages/ProjectDetail.tsx
+- frontend/src/pages/ProjectDetail.test.tsx
+- backend/app/routers/tasks.py
+- backend/app/schemas/task.py
+- backend/app/schemas/__init__.py
+- backend/tests/api/test_tasks_api.py
+- backend/tests/unit/test_task_schema.py
+- _bmad-output/implementation-artifacts/3-3-toggle-task-status.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
 
 ### Change Log
 
 - 2026-01-24: Story created with ready-for-dev status.
+- 2026-01-24: Implemented task status toggle backend and frontend with tests; status set to review.
+- 2026-01-24: Code review fixes applied (toggle/edit conflict, loading state test).

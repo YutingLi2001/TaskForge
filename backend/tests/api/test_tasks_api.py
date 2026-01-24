@@ -462,6 +462,130 @@ class TasksApiTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 401)
 
+    def test_toggle_task_status_from_incomplete_to_complete(self):
+        async def setup():
+            async with db.SessionLocal() as session:
+                user = await self._create_user(session, "user@example.com", "secret123")
+                project = await self._create_project(session, user.id, name="Tasks Project")
+                task = await self._create_task(session, project.id, title="Task")
+                return user, project, task
+
+        user, project, task = asyncio.run(setup())
+
+        response = self.client.patch(
+            f"/api/projects/{project.id}/tasks/{task.id}",
+            json={"is_complete": True},
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()["data"]
+        self.assertEqual(body["id"], task.id)
+        self.assertEqual(body["is_complete"], True)
+
+    def test_toggle_task_status_from_complete_to_incomplete(self):
+        async def setup():
+            async with db.SessionLocal() as session:
+                user = await self._create_user(session, "user@example.com", "secret123")
+                project = await self._create_project(session, user.id, name="Tasks Project")
+                task = await self._create_task(session, project.id, title="Task")
+                task.is_complete = True
+                await session.commit()
+                await session.refresh(task)
+                return user, project, task
+
+        user, project, task = asyncio.run(setup())
+
+        response = self.client.patch(
+            f"/api/projects/{project.id}/tasks/{task.id}",
+            json={"is_complete": False},
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()["data"]
+        self.assertEqual(body["id"], task.id)
+        self.assertEqual(body["is_complete"], False)
+
+    def test_toggle_task_returns_404_for_missing_task(self):
+        async def setup():
+            async with db.SessionLocal() as session:
+                user = await self._create_user(session, "user@example.com", "secret123")
+                project = await self._create_project(session, user.id, name="Tasks Project")
+                return user, project
+
+        user, project = asyncio.run(setup())
+
+        response = self.client.patch(
+            f"/api/projects/{project.id}/tasks/9999",
+            json={"is_complete": True},
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_toggle_task_returns_404_for_missing_project(self):
+        async def setup():
+            async with db.SessionLocal() as session:
+                user = await self._create_user(session, "user@example.com", "secret123")
+                return user
+
+        user = asyncio.run(setup())
+
+        response = self.client.patch(
+            "/api/projects/9999/tasks/1",
+            json={"is_complete": True},
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_toggle_task_returns_403_for_non_owner(self):
+        async def setup():
+            async with db.SessionLocal() as session:
+                owner = await self._create_user(session, "owner@example.com", "secret123")
+                other = await self._create_user(session, "other@example.com", "secret123")
+                project = await self._create_project(session, owner.id, name="Owner Project")
+                task = await self._create_task(session, project.id, title="Task")
+                return owner, other, project, task
+
+        owner, other, project, task = asyncio.run(setup())
+
+        response = self.client.patch(
+            f"/api/projects/{project.id}/tasks/{task.id}",
+            json={"is_complete": True},
+            headers=self._auth_header_for(other.email),
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_toggle_task_returns_401_for_unauthenticated(self):
+        response = self.client.patch(
+            "/api/projects/1/tasks/1",
+            json={"is_complete": True},
+        )
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_toggle_task_returns_404_when_task_not_in_project(self):
+        async def setup():
+            async with db.SessionLocal() as session:
+                user = await self._create_user(session, "user@example.com", "secret123")
+                project = await self._create_project(session, user.id, name="Project A")
+                other_project = await self._create_project(session, user.id, name="Project B")
+                task = await self._create_task(session, other_project.id, title="Task")
+                return user, project, task
+
+        user, project, task = asyncio.run(setup())
+
+        response = self.client.patch(
+            f"/api/projects/{project.id}/tasks/{task.id}",
+            json={"is_complete": True},
+            headers=self._auth_header_for(user.email),
+        )
+
+        self.assertEqual(response.status_code, 404)
+
 
 if __name__ == "__main__":
     unittest.main()

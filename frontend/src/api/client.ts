@@ -66,6 +66,11 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
+  patch: <T>(endpoint: string, data: unknown) =>
+    request<T>(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
   delete: <T>(endpoint: string) =>
     request<T>(endpoint, { method: 'DELETE' }),
 };
@@ -134,6 +139,10 @@ export interface UpdateTaskData {
   title: string;
 }
 
+export interface ToggleTaskStatusData {
+  is_complete: boolean;
+}
+
 export const authApi = {
   register: (data: RegisterData) =>
     api.post<ApiResponse<UserData>>('/auth/register', data),
@@ -163,6 +172,15 @@ export const tasksApi = {
     api.post<ApiResponse<TaskData>>(`/projects/${projectId}/tasks`, data),
   update: (projectId: number, taskId: number, data: UpdateTaskData) =>
     api.put<ApiResponse<TaskData>>(
+      `/projects/${projectId}/tasks/${taskId}`,
+      data
+    ),
+  toggleStatus: (
+    projectId: number,
+    taskId: number,
+    data: ToggleTaskStatusData
+  ) =>
+    api.patch<ApiResponse<TaskData>>(
       `/projects/${projectId}/tasks/${taskId}`,
       data
     ),

@@ -36,6 +36,7 @@ vi.mock('../api/client', async () => {
       list: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      toggleStatus: vi.fn(),
     },
   };
 });
@@ -50,6 +51,7 @@ describe('ProjectDetail page', () => {
     vi.mocked(tasksApi.list).mockReset();
     vi.mocked(tasksApi.create).mockReset();
     vi.mocked(tasksApi.update).mockReset();
+    vi.mocked(tasksApi.toggleStatus).mockReset();
     mockLogout.mockReset();
     mockNavigate.mockReset();
     vi.mocked(tasksApi.list).mockResolvedValue({ data: [] });
@@ -1178,5 +1180,259 @@ describe('ProjectDetail page', () => {
     expect(screen.queryByDisplayValue('Changed')).not.toBeInTheDocument();
     expect(await screen.findByText('Design flows')).toBeInTheDocument();
     expect(tasksApi.update).not.toHaveBeenCalled();
+  });
+
+  // Story 3.3: Toggle Task Status
+
+  it('toggles task from incomplete to complete', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: false,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+    vi.mocked(tasksApi.toggleStatus).mockResolvedValue({
+      data: {
+        id: 10,
+        title: 'Design flows',
+        is_complete: true,
+        project_id: 1,
+        created_at: '2026-01-23T00:00:00Z',
+        updated_at: '2026-01-24T00:00:00Z',
+      },
+    });
+
+    renderWithRoute('1');
+
+    const toggleButton = await screen.findByRole('button', {
+      name: /mark task as complete/i,
+    });
+    await user.click(toggleButton);
+
+    await waitFor(() => {
+      expect(tasksApi.toggleStatus).toHaveBeenCalledWith(1, 10, {
+        is_complete: true,
+      });
+    });
+
+    expect(await screen.findByText('Design flows')).toHaveClass('line-through');
+  });
+
+  it('toggles task from complete to incomplete', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: true,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+    vi.mocked(tasksApi.toggleStatus).mockResolvedValue({
+      data: {
+        id: 10,
+        title: 'Design flows',
+        is_complete: false,
+        project_id: 1,
+        created_at: '2026-01-23T00:00:00Z',
+        updated_at: '2026-01-24T00:00:00Z',
+      },
+    });
+
+    renderWithRoute('1');
+
+    const toggleButton = await screen.findByRole('button', {
+      name: /mark task as incomplete/i,
+    });
+    await user.click(toggleButton);
+
+    await waitFor(() => {
+      expect(tasksApi.toggleStatus).toHaveBeenCalledWith(1, 10, {
+        is_complete: false,
+      });
+    });
+
+    expect(await screen.findByText('Design flows')).not.toHaveClass(
+      'line-through'
+    );
+  });
+
+  it('shows strikethrough styling for completed tasks', async () => {
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: true,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+
+    renderWithRoute('1');
+
+    const title = await screen.findByText('Design flows');
+    expect(title).toHaveClass('line-through');
+  });
+
+  it('shows normal styling for incomplete tasks', async () => {
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: false,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+
+    renderWithRoute('1');
+
+    const title = await screen.findByText('Design flows');
+    expect(title).not.toHaveClass('line-through');
+  });
+
+  it('shows error when toggle fails', async () => {
+    const user = userEvent.setup();
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: false,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+    vi.mocked(tasksApi.toggleStatus).mockRejectedValue(
+      new ApiRequestError(403, 'Forbidden')
+    );
+
+    renderWithRoute('1');
+
+    const toggleButton = await screen.findByRole('button', {
+      name: /mark task as complete/i,
+    });
+    await user.click(toggleButton);
+
+    expect(
+      await screen.findByText(/permission to update this task/i)
+    ).toBeInTheDocument();
+  });
+
+  it('disables toggle and edit buttons while toggle is in flight', async () => {
+    const user = userEvent.setup();
+    let resolveToggle: (value: { data: unknown }) => void;
+    const togglePromise = new Promise<{ data: unknown }>((resolve) => {
+      resolveToggle = resolve;
+    });
+    vi.mocked(projectsApi.get).mockResolvedValue({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
+    vi.mocked(tasksApi.list).mockResolvedValue({
+      data: [
+        {
+          id: 10,
+          title: 'Design flows',
+          is_complete: false,
+          project_id: 1,
+          created_at: '2026-01-23T00:00:00Z',
+          updated_at: '2026-01-23T00:00:00Z',
+        },
+      ],
+    });
+    vi.mocked(tasksApi.toggleStatus).mockReturnValue(togglePromise);
+
+    renderWithRoute('1');
+
+    const toggleButton = await screen.findByRole('button', {
+      name: /mark task as complete/i,
+    });
+    const editButton = await screen.findByRole('button', { name: /edit task/i });
+
+    await user.click(toggleButton);
+
+    expect(toggleButton).toBeDisabled();
+    expect(editButton).toBeDisabled();
+
+    resolveToggle!({
+      data: {
+        id: 10,
+        title: 'Design flows',
+        is_complete: true,
+        project_id: 1,
+        created_at: '2026-01-23T00:00:00Z',
+        updated_at: '2026-01-24T00:00:00Z',
+      },
+    });
   });
 });

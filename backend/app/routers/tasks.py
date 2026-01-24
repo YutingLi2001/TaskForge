@@ -13,6 +13,7 @@ from ..schemas.task import (
     TaskDataResponse,
     TaskListResponse,
     TaskResponse,
+    TaskStatusUpdate,
     TaskUpdate,
 )
 from ..utils.auth import get_current_user
@@ -79,6 +80,27 @@ async def update_task(
     if task.project_id != project.id:
         raise HTTPException(status_code=404, detail="Task not found")
     task.title = task_data.title
+    task.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(task)
+    return TaskDataResponse(data=TaskResponse.model_validate(task))
+
+
+@router.patch("/{task_id}", response_model=TaskDataResponse)
+async def toggle_task_status(
+    project_id: int,
+    task_id: int,
+    task_data: TaskStatusUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    project = await get_project_or_404(project_id, current_user, db)
+    task = await db.scalar(
+        select(Task).where(Task.id == task_id, Task.project_id == project.id)
+    )
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    task.is_complete = task_data.is_complete
     task.updated_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(task)
