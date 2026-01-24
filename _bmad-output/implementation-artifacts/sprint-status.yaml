@@ -53,6 +53,6 @@ development_status:
   epic-3: in-progress
   3-1-view-tasks-create: done
   3-2-edit-task: review
-  3-3-toggle-task-status: backlog
+  3-3-toggle-task-status: ready-for-dev
   3-4-delete-task: backlog
   epic-3-retrospective: optional
