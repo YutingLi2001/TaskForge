@@ -12,6 +12,12 @@ vi.mock('./api/client', () => ({
 
 import { authApi } from './api/client';
 
+const mockUser = {
+  id: 1,
+  email: 'user@example.com',
+  created_at: '2026-01-01T00:00:00Z',
+};
+
 describe('App routing integration', () => {
   const makeToken = (expOffsetSeconds: number) => {
     const payload = btoa(
@@ -47,7 +53,7 @@ describe('App routing integration', () => {
     unmount();
 
     localStorage.setItem('token', makeToken(60));
-    vi.mocked(authApi.me).mockResolvedValue({ data: {} });
+    vi.mocked(authApi.me).mockResolvedValue({ data: mockUser });
     const { unmount: unmountAuthed } = render(
       <MemoryRouter initialEntries={['/dashboard']}>
         <Routes>
@@ -89,7 +95,7 @@ describe('App routing integration', () => {
 
   it('redirects authenticated users from login to dashboard', async () => {
     localStorage.setItem('token', makeToken(60));
-    vi.mocked(authApi.me).mockResolvedValue({ data: {} });
+    vi.mocked(authApi.me).mockResolvedValue({ data: mockUser });
 
     render(
       <MemoryRouter initialEntries={['/login']}>
