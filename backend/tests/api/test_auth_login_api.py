@@ -3,30 +3,35 @@ import os
 import unittest
 from datetime import datetime, timedelta, timezone
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
-os.environ["DATABASE_URL"] = DATABASE_URL
-
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from backend.app import config
-from backend.app import database as db
-from backend.app.database import get_db
+config = None
+db = None
+get_db = None
 
 
 class AuthLoginApiTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        if DATABASE_URL.startswith("sqlite"):
+        os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+        database_url = os.environ["DATABASE_URL"]
+
+        global config, db, get_db
+        from backend.app import config as config
+        from backend.app import database as db
+        from backend.app.database import get_db
+
+        if database_url.startswith("sqlite"):
             cls.engine = create_async_engine(
-                DATABASE_URL,
+                database_url,
                 connect_args={"check_same_thread": False},
                 poolclass=StaticPool,
             )
         else:
-            cls.engine = create_async_engine(DATABASE_URL)
+            cls.engine = create_async_engine(database_url)
         db.engine = cls.engine
         db.SessionLocal = async_sessionmaker(
             autocommit=False,
