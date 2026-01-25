@@ -1,6 +1,6 @@
 # Story 4.1: GitHub Actions CI
 
-Status: in-progress
+Status: review
 
 ## Story
 
@@ -51,28 +51,28 @@ So that **code quality is validated before merging**.
 
 ### Phase 3: Parallelization & Branch Protection
 
-- [ ] **Task 4: Parallel Job Configuration** (AC: 7, 9)
+- [x] **Task 4: Parallel Job Configuration** (AC: 7, 9)
   - [x] Ensure `backend` and `frontend` jobs have no `needs` dependency (run in parallel)
   - [x] Add timeout limits to jobs (e.g., 10 minutes max)
   - [x] Test workflow locally or on a test PR to verify parallel execution
 
-- [ ] **Task 5: Branch Protection Rules** (AC: 10)
-  - [ ] Document branch protection setup in story file (manual GitHub UI step)
-  - [ ] Enable "Require status checks to pass before merging" for `develop`
-  - [ ] Select `backend` and `frontend` jobs as required checks
-  - [ ] Enable "Require branches to be up to date before merging" (optional but recommended)
+- [x] **Task 5: Branch Protection Rules** (AC: 10)
+  - [x] Document branch protection setup in story file (manual GitHub UI step)
+  - [x] Enable "Require status checks to pass before merging" for `develop`
+  - [x] Select `backend` and `frontend` jobs as required checks
+  - [x] Enable "Require branches to be up to date before merging" (optional but recommended)
 
 ### Phase 4: Validation
 
-- [ ] **Task 6: End-to-End Validation**
-  - [ ] Create test PR with passing code
-  - [ ] Verify both jobs run in parallel
-  - [ ] Verify all checks pass
-  - [ ] Verify logs are accessible and downloadable
-  - [ ] Verify workflow completes in < 5 minutes
-  - [ ] Create test PR with failing test
-  - [ ] Verify merge is blocked when checks fail
-  - [ ] Document any issues and fixes
+- [x] **Task 6: End-to-End Validation**
+  - [x] Create test PR with passing code
+  - [x] Verify both jobs run in parallel
+  - [x] Verify all checks pass
+  - [x] Verify logs are accessible and downloadable
+  - [x] Verify workflow completes in < 5 minutes
+  - [x] Create test PR with failing test
+  - [x] Verify merge is blocked when checks fail
+  - [x] Document any issues and fixes
 
 ## Dev Notes
 
@@ -178,10 +178,10 @@ Backend tests need these environment variables in CI:
 
 ### Success Metrics
 
-- [ ] CI completes in < 5 minutes
-- [ ] Both jobs run in parallel
-- [ ] Failed checks block PR merge
-- [ ] Logs are accessible in GitHub UI
+- [x] CI completes in < 5 minutes
+- [x] Both jobs run in parallel
+- [x] Failed checks block PR merge
+- [x] Logs are accessible in GitHub UI
 
 ## References
 
@@ -216,6 +216,10 @@ Backend tests need these environment variables in CI:
 - Adjusted frontend build config for Vitest and TypeScript build exclusions.
 - Updated test mocks to satisfy TypeScript build.
 - Removed `tee` logging so CI fails on any step error.
+- Restored `tee` logging with `set -euo pipefail` and uploaded CI logs as artifacts to keep failures fatal while preserving downloads.
+- Branch protection for `develop` configured with required checks and up-to-date enforcement.
+- End-to-end PR validation completed (passing and failing runs, merge blocked on failure).
+- Ran backend and frontend test scripts from `scripts/windows`, logs stored in `logs/`.
 
 ### File List
 
@@ -248,3 +252,4 @@ Backend tests need these environment variables in CI:
 ### Change Log
 
 - 2026-01-24: Story created with ready-for-dev status based on requirements discussion.
+- 2026-01-25: Completed CI validation, branch protection, and artifact logging updates.
