@@ -1,6 +1,6 @@
 # Story 4.1: GitHub Actions CI
 
-Status: review
+Status: done
 
 ## Story
 
@@ -220,15 +220,19 @@ Backend tests need these environment variables in CI:
 - Branch protection for `develop` configured with required checks and up-to-date enforcement.
 - End-to-end PR validation completed (passing and failing runs, merge blocked on failure).
 - Ran backend and frontend test scripts from `scripts/windows`, logs stored in `logs/`.
+- Tightened CI timeouts to enforce sub-5-minute runs and added test typecheck to CI.
+- Updated API tests to use PostgreSQL in CI when `DATABASE_URL` is set.
 
 ### File List
 
 **New:**
 - .github/workflows/ci.yml
 - ruff.toml (or pyproject.toml)
+- frontend/tsconfig.test.json
 
 **Modified:**
 - .github/workflows/ci.yml
+- frontend/package.json
 - frontend/tsconfig.app.json
 - frontend/vite.config.ts
 - frontend/src/pages/Projects.tsx
@@ -244,6 +248,8 @@ Backend tests need these environment variables in CI:
 - backend/app/schemas/user.py
 - backend/app/utils/auth.py
 - backend/tests/api/test_auth_login_api.py
+- backend/tests/api/test_auth_me_api.py
+- backend/tests/api/test_auth_registration_api.py
 - backend/tests/api/test_projects_api.py
 - backend/tests/api/test_tasks_api.py
 - backend/tests/unit/test_auth_registration.py
@@ -253,3 +259,4 @@ Backend tests need these environment variables in CI:
 
 - 2026-01-24: Story created with ready-for-dev status based on requirements discussion.
 - 2026-01-25: Completed CI validation, branch protection, and artifact logging updates.
+- 2026-01-25: Code review fixes applied (timeouts, test typecheck, Postgres-backed API tests).

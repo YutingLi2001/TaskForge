@@ -2,7 +2,8 @@ import asyncio
 import os
 import unittest
 
-os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+os.environ["DATABASE_URL"] = DATABASE_URL
 
 from fastapi.testclient import TestClient
 from sqlalchemy import select
@@ -17,11 +18,14 @@ from backend.app.models.user import User
 class AuthRegistrationApiTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.engine = create_async_engine(
-            "sqlite+aiosqlite:///:memory:",
-            connect_args={"check_same_thread": False},
-            poolclass=StaticPool,
-        )
+        if DATABASE_URL.startswith("sqlite"):
+            cls.engine = create_async_engine(
+                DATABASE_URL,
+                connect_args={"check_same_thread": False},
+                poolclass=StaticPool,
+            )
+        else:
+            cls.engine = create_async_engine(DATABASE_URL)
         db.engine = cls.engine
         db.SessionLocal = async_sessionmaker(
             autocommit=False,
