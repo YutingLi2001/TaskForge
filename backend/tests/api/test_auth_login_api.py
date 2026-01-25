@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool, StaticPool
 
 config = None
 db = None
@@ -31,7 +31,7 @@ class AuthLoginApiTests(unittest.TestCase):
                 poolclass=StaticPool,
             )
         else:
-            cls.engine = create_async_engine(database_url)
+            cls.engine = create_async_engine(database_url, poolclass=NullPool)
         db.engine = cls.engine
         db.SessionLocal = async_sessionmaker(
             autocommit=False,
