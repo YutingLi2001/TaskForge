@@ -1,8 +1,8 @@
 import asyncio
 import unittest
 
-from pydantic import ValidationError
 from fastapi import HTTPException
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool

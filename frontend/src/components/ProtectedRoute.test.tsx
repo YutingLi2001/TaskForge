@@ -17,6 +17,12 @@ vi.mock('../api/client', async () => {
 
 import { ApiRequestError, authApi } from '../api/client';
 
+const mockUser = {
+  id: 1,
+  email: 'user@example.com',
+  created_at: '2026-01-01T00:00:00Z',
+};
+
 describe('ProtectedRoute', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -55,7 +61,7 @@ describe('ProtectedRoute', () => {
 
   it('renders children when token exists', async () => {
     localStorage.setItem('token', makeToken(60));
-    vi.mocked(authApi.me).mockResolvedValue({ data: {} });
+    vi.mocked(authApi.me).mockResolvedValue({ data: mockUser });
 
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
