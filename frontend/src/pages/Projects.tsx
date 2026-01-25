@@ -1,4 +1,5 @@
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
 import Header from '../components/Header';
 import { Link } from 'react-router-dom';
 import { ApiRequestError, projectsApi } from '../api/client';

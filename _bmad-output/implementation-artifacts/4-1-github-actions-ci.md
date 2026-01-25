@@ -212,6 +212,9 @@ Backend tests need these environment variables in CI:
 - Added `ruff` to backend requirements and created `ruff.toml` configuration.
 - Ran `python -m ruff check --fix backend/` and `python -m ruff check backend/` to resolve import ordering and unused imports.
 - Added GitHub Actions CI workflow with parallel backend/frontend jobs, PostgreSQL service, and log artifacts (pending PR validation).
+- Added `httpx` dependency for FastAPI TestClient in CI.
+- Ensured CI steps fail on errors by enabling `pipefail`.
+- Adjusted frontend build config for Vitest and TypeScript build exclusions.
 
 ### File List
 
@@ -220,6 +223,10 @@ Backend tests need these environment variables in CI:
 - ruff.toml (or pyproject.toml)
 
 **Modified:**
+- .github/workflows/ci.yml
+- frontend/tsconfig.app.json
+- frontend/vite.config.ts
+- frontend/src/pages/Projects.tsx
 - backend/requirements.txt (add ruff)
 - backend/app/config.py
 - backend/app/main.py
