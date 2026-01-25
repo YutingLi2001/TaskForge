@@ -1,7 +1,7 @@
 import asyncio
 import os
 import unittest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 

@@ -3,6 +3,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ProjectDetail from './ProjectDetail';
+import type { ProjectData, TaskData } from '../api/client';
 
 const mockLogout = vi.fn();
 const mockNavigate = vi.fn();
@@ -344,8 +345,8 @@ describe('ProjectDetail page', () => {
   it('disables delete button while deleting', async () => {
     const user = userEvent.setup();
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
-    let resolveDelete: (value: { data: unknown }) => void;
-    const deletePromise = new Promise<{ data: unknown }>((resolve) => {
+    let resolveDelete: (value: { data: ProjectData }) => void;
+    const deletePromise = new Promise<{ data: ProjectData }>((resolve) => {
       resolveDelete = resolve;
     });
 
@@ -371,7 +372,15 @@ describe('ProjectDetail page', () => {
       expect(deleteButton).toHaveTextContent(/deleting/i);
     });
 
-    resolveDelete!({ data: {} });
+    resolveDelete!({
+      data: {
+        id: 1,
+        name: 'Launch Plan',
+        user_id: 1,
+        created_at: '2026-01-21T00:00:00Z',
+        updated_at: '2026-01-22T00:00:00Z',
+      },
+    });
     confirmSpy.mockRestore();
   });
 
@@ -528,8 +537,8 @@ describe('ProjectDetail page', () => {
 
   it('prevents duplicate task submissions while creating', async () => {
     const user = userEvent.setup();
-    let resolveCreate: (value: { data: unknown }) => void;
-    const createPromise = new Promise<{ data: unknown }>((resolve) => {
+    let resolveCreate: (value: { data: TaskData }) => void;
+    const createPromise = new Promise<{ data: TaskData }>((resolve) => {
       resolveCreate = resolve;
     });
     vi.mocked(projectsApi.get).mockResolvedValue({
@@ -555,7 +564,16 @@ describe('ProjectDetail page', () => {
 
     expect(tasksApi.create).toHaveBeenCalledTimes(1);
 
-    resolveCreate!({ data: { id: 99 } });
+    resolveCreate!({
+      data: {
+        id: 99,
+        title: 'Dedup task',
+        is_complete: false,
+        project_id: 1,
+        created_at: '2026-01-23T00:00:00Z',
+        updated_at: '2026-01-23T00:00:00Z',
+      },
+    });
   });
 
   it('shows validation error for empty task title', async () => {
@@ -1387,8 +1405,8 @@ describe('ProjectDetail page', () => {
 
   it('disables toggle and edit buttons while toggle is in flight', async () => {
     const user = userEvent.setup();
-    let resolveToggle: (value: { data: unknown }) => void;
-    const togglePromise = new Promise<{ data: unknown }>((resolve) => {
+    let resolveToggle: (value: { data: TaskData }) => void;
+    const togglePromise = new Promise<{ data: TaskData }>((resolve) => {
       resolveToggle = resolve;
     });
     vi.mocked(projectsApi.get).mockResolvedValue({
@@ -1607,8 +1625,8 @@ describe('ProjectDetail page', () => {
   it('disables delete, edit, and toggle buttons during delete operation', async () => {
     const user = userEvent.setup();
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
-    let resolveDelete: (value: { data: unknown }) => void;
-    const deletePromise = new Promise<{ data: unknown }>((resolve) => {
+    let resolveDelete: (value: { data: TaskData }) => void;
+    const deletePromise = new Promise<{ data: TaskData }>((resolve) => {
       resolveDelete = resolve;
     });
     vi.mocked(projectsApi.get).mockResolvedValue({

@@ -18,6 +18,12 @@ vi.mock('../api/client', async () => {
 
 import { ApiRequestError, authApi } from '../api/client';
 
+const mockUser = {
+  id: 1,
+  email: 'user@example.com',
+  created_at: '2026-01-01T00:00:00Z',
+};
+
 describe('PublicRoute', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -36,7 +42,7 @@ describe('PublicRoute', () => {
 
   it('redirects authenticated users to dashboard', async () => {
     localStorage.setItem('token', makeToken(60));
-    vi.mocked(authApi.me).mockResolvedValue({ data: {} });
+    vi.mocked(authApi.me).mockResolvedValue({ data: mockUser });
 
     render(
       <MemoryRouter initialEntries={['/login']}>
@@ -73,7 +79,7 @@ describe('PublicRoute', () => {
 
   it('redirects authenticated users away from the login page', async () => {
     localStorage.setItem('token', makeToken(60));
-    vi.mocked(authApi.me).mockResolvedValue({ data: {} });
+    vi.mocked(authApi.me).mockResolvedValue({ data: mockUser });
 
     render(
       <MemoryRouter initialEntries={['/login']}>

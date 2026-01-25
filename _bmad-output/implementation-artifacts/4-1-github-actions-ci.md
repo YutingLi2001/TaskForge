@@ -1,6 +1,6 @@
 # Story 4.1: GitHub Actions CI
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -26,35 +26,35 @@ So that **code quality is validated before merging**.
 
 ### Phase 1: Backend CI Configuration
 
-- [ ] **Task 1: Add Ruff Configuration** (AC: 4)
-  - [ ] Add `ruff` to `backend/requirements.txt` (or create `requirements-dev.txt`)
-  - [ ] Create `ruff.toml` or `pyproject.toml` with ruff settings
-  - [ ] Configure ruff rules (recommend: `select = ["E", "F", "I"]` for errors, pyflakes, isort)
-  - [ ] Run `ruff check backend/` locally to verify no initial errors (fix if needed)
+- [x] **Task 1: Add Ruff Configuration** (AC: 4)
+  - [x] Add `ruff` to `backend/requirements.txt` (or create `requirements-dev.txt`)
+  - [x] Create `ruff.toml` or `pyproject.toml` with ruff settings
+  - [x] Configure ruff rules (recommend: `select = ["E", "F", "I"]` for errors, pyflakes, isort)
+  - [x] Run `ruff check backend/` locally to verify no initial errors (fix if needed)
 
-- [ ] **Task 2: Backend CI Job** (AC: 2, 4, 8)
-  - [ ] Create `.github/workflows/ci.yml`
-  - [ ] Configure trigger: `pull_request` to `develop` branch
-  - [ ] Add `backend` job with `ubuntu-latest` runner
-  - [ ] Add PostgreSQL service container with health check
-  - [ ] Set environment variables for database connection
-  - [ ] Add steps: checkout, setup-python (3.11), install dependencies, ruff check, run tests
-  - [ ] Upload test logs as artifacts
+- [x] **Task 2: Backend CI Job** (AC: 2, 4, 8)
+  - [x] Create `.github/workflows/ci.yml`
+  - [x] Configure trigger: `pull_request` to `develop` branch
+  - [x] Add `backend` job with `ubuntu-latest` runner
+  - [x] Add PostgreSQL service container with health check
+  - [x] Set environment variables for database connection
+  - [x] Add steps: checkout, setup-python (3.11), install dependencies, ruff check, run tests
+  - [x] Upload test logs as artifacts
 
 ### Phase 2: Frontend CI Configuration
 
-- [ ] **Task 3: Frontend CI Job** (AC: 3, 5, 6)
-  - [ ] Add `frontend` job to `.github/workflows/ci.yml`
-  - [ ] Use `ubuntu-latest` runner
-  - [ ] Add steps: checkout, setup-node (20), npm install, npm run lint, npm run test, npm run build
-  - [ ] Upload build artifacts (optional, for verification)
+- [x] **Task 3: Frontend CI Job** (AC: 3, 5, 6)
+  - [x] Add `frontend` job to `.github/workflows/ci.yml`
+  - [x] Use `ubuntu-latest` runner
+  - [x] Add steps: checkout, setup-node (20), npm install, npm run lint, npm run test, npm run build
+  - [x] Upload build artifacts (optional, for verification)
 
 ### Phase 3: Parallelization & Branch Protection
 
 - [ ] **Task 4: Parallel Job Configuration** (AC: 7, 9)
-  - [ ] Ensure `backend` and `frontend` jobs have no `needs` dependency (run in parallel)
-  - [ ] Add timeout limits to jobs (e.g., 10 minutes max)
-  - [ ] Test workflow locally or on a test PR to verify parallel execution
+  - [x] Ensure `backend` and `frontend` jobs have no `needs` dependency (run in parallel)
+  - [x] Add timeout limits to jobs (e.g., 10 minutes max)
+  - [x] Test workflow locally or on a test PR to verify parallel execution
 
 - [ ] **Task 5: Branch Protection Rules** (AC: 10)
   - [ ] Document branch protection setup in story file (manual GitHub UI step)
@@ -209,7 +209,13 @@ Backend tests need these environment variables in CI:
 
 ### Completion Notes List
 
-(To be filled during implementation)
+- Added `ruff` to backend requirements and created `ruff.toml` configuration.
+- Ran `python -m ruff check --fix backend/` and `python -m ruff check backend/` to resolve import ordering and unused imports.
+- Added GitHub Actions CI workflow with parallel backend/frontend jobs and PostgreSQL service.
+- Added `httpx` dependency for FastAPI TestClient in CI.
+- Adjusted frontend build config for Vitest and TypeScript build exclusions.
+- Updated test mocks to satisfy TypeScript build.
+- Removed `tee` logging so CI fails on any step error.
 
 ### File List
 
@@ -218,7 +224,26 @@ Backend tests need these environment variables in CI:
 - ruff.toml (or pyproject.toml)
 
 **Modified:**
+- .github/workflows/ci.yml
+- frontend/tsconfig.app.json
+- frontend/vite.config.ts
+- frontend/src/pages/Projects.tsx
+- frontend/src/AppRouting.test.tsx
+- frontend/src/components/ProtectedRoute.test.tsx
+- frontend/src/components/PublicRoute.test.tsx
+- frontend/src/pages/ProjectDetail.test.tsx
 - backend/requirements.txt (add ruff)
+- backend/app/config.py
+- backend/app/main.py
+- backend/app/models/user.py
+- backend/app/routers/auth.py
+- backend/app/schemas/user.py
+- backend/app/utils/auth.py
+- backend/tests/api/test_auth_login_api.py
+- backend/tests/api/test_projects_api.py
+- backend/tests/api/test_tasks_api.py
+- backend/tests/unit/test_auth_registration.py
+- backend/tests/unit/test_project_model.py
 
 ### Change Log
 

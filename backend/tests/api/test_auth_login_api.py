@@ -10,9 +10,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
+from backend.app import config
 from backend.app import database as db
 from backend.app.database import get_db
-from backend.app import config
 
 
 class AuthLoginApiTests(unittest.TestCase):

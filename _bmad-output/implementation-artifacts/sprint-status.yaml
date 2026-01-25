@@ -55,6 +55,7 @@ development_status:
   3-2-edit-task: done
   3-3-toggle-task-status: done
   3-4-delete-task: done
+  epic-3-retrospective: optional
 
   # ============================================
   # MVP COMPLETE - 2026-01-24
@@ -63,7 +64,7 @@ development_status:
 
   # Epic 4: CI/CD & DevOps
   epic-4: in-progress
-  4-1-github-actions-ci: ready-for-dev
+  4-1-github-actions-ci: in-progress
   4-2-test-coverage-reporting: backlog
   4-3-production-docker: backlog
 
