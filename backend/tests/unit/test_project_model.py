@@ -5,7 +5,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from backend.app.database import Base
-from backend.app.models.project import Project
 
 
 class ProjectModelTests(unittest.TestCase):

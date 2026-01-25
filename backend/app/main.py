@@ -9,10 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 
-from .routers import auth_router, projects_router, tasks_router
-from .models import Project, Task
 from . import database as db
 from .config import FRONTEND_URLS
+from .routers import auth_router, projects_router, tasks_router
 
 logger = logging.getLogger("taskforge.api")
 

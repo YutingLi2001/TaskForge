@@ -36,9 +36,9 @@ class ProjectsApiTests(unittest.TestCase):
                 yield session
 
         from backend.app import main
-        from backend.app.models.user import User
         from backend.app.models.project import Project
         from backend.app.models.task import Task
+        from backend.app.models.user import User
 
         cls.User = User
         cls.Project = Project
