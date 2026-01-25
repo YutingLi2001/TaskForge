@@ -283,7 +283,12 @@ class AuthLoginApiTests(unittest.TestCase):
         user = asyncio.run(fetch_user())
         self.assertIsNotNone(user)
         self.assertIsNotNone(user.refresh_token_expires_at)
-        delta = user.refresh_token_expires_at - datetime.now(timezone.utc).replace(tzinfo=None)
+        refresh_expires = user.refresh_token_expires_at
+        now = datetime.now(timezone.utc)
+        # PostgreSQL returns aware datetimes, SQLite returns naive
+        if refresh_expires.tzinfo is None:
+            now = now.replace(tzinfo=None)
+        delta = refresh_expires - now
         self.assertGreater(delta, timedelta(days=config.REMEMBER_ME_REFRESH_DAYS - 1))
 
 
