@@ -1,0 +1,8 @@
+[coverage:run]
+source = backend/app
+omit =
+    backend/tests/*
+    */__pycache__/*
+
+[coverage:report]
+show_missing = true
