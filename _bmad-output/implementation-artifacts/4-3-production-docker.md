@@ -1,6 +1,6 @@
 # Story 4.3: Production Docker Configuration
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -22,70 +22,70 @@ So that **deployments are fast and secure**.
 
 ### Phase 1: Backend Production Dockerfile
 
-- [ ] **Task 1: Create Multi-Stage Backend Dockerfile** (AC: 1, 2, 7)
-  - [ ] Create `backend/Dockerfile.prod` with multi-stage build
-  - [ ] Stage 1: Install dependencies in builder stage
-  - [ ] Stage 2: Copy only necessary files to slim runtime image
-  - [ ] Create non-root user (appuser) and set ownership
-  - [ ] Remove --reload flag from uvicorn command
-  - [ ] Verify image size reduction compared to current Dockerfile
+- [x] **Task 1: Create Multi-Stage Backend Dockerfile** (AC: 1, 2, 7)
+  - [x] Create `backend/Dockerfile.prod` with multi-stage build
+  - [x] Stage 1: Install dependencies in builder stage
+  - [x] Stage 2: Copy only necessary files to slim runtime image
+  - [x] Create non-root user (appuser) and set ownership
+  - [x] Remove --reload flag from uvicorn command
+  - [x] Verify image size reduction compared to current Dockerfile (417MB → 401MB)
 
-- [ ] **Task 2: Add Backend Health Check** (AC: 3)
-  - [ ] Add HEALTHCHECK instruction to Dockerfile.prod
-  - [ ] Use existing /api/health endpoint
-  - [ ] Configure appropriate interval, timeout, and retries
+- [x] **Task 2: Add Backend Health Check** (AC: 3)
+  - [x] Add HEALTHCHECK instruction to Dockerfile.prod
+  - [x] Use existing /api/health endpoint
+  - [x] Configure appropriate interval, timeout, and retries
 
-- [ ] **Task 3: Create Backend .dockerignore** (AC: 4)
-  - [ ] Create `backend/.dockerignore`
-  - [ ] Exclude: __pycache__, .pytest_cache, .coverage, htmlcov, *.pyc
-  - [ ] Exclude: .git, .env, tests/, *.md, .vscode
+- [x] **Task 3: Create Backend .dockerignore** (AC: 4)
+  - [x] Create `backend/.dockerignore`
+  - [x] Exclude: __pycache__, .pytest_cache, .coverage, htmlcov, *.pyc
+  - [x] Exclude: .git, .env, tests/, *.md, .vscode
 
 ### Phase 2: Frontend Production Dockerfile
 
-- [ ] **Task 4: Create Multi-Stage Frontend Dockerfile** (AC: 1, 2, 6)
-  - [ ] Create `frontend/Dockerfile.prod` with multi-stage build
-  - [ ] Stage 1: Build static assets with npm run build
-  - [ ] Stage 2: Serve with nginx:alpine
-  - [ ] Create non-root nginx configuration
-  - [ ] Configure nginx for SPA routing (fallback to index.html)
-  - [ ] Verify image size reduction compared to current Dockerfile
+- [x] **Task 4: Create Multi-Stage Frontend Dockerfile** (AC: 1, 2, 6)
+  - [x] Create `frontend/Dockerfile.prod` with multi-stage build
+  - [x] Stage 1: Build static assets with npm run build
+  - [x] Stage 2: Serve with nginx:alpine
+  - [x] Create non-root nginx configuration
+  - [x] Configure nginx for SPA routing (fallback to index.html)
+  - [x] Verify image size reduction compared to current Dockerfile (507MB → 93MB, 82% reduction)
 
-- [ ] **Task 5: Add Frontend Health Check** (AC: 3)
-  - [ ] Add HEALTHCHECK instruction to Dockerfile.prod
-  - [ ] Check nginx is serving content
-  - [ ] Configure appropriate interval, timeout, and retries
+- [x] **Task 5: Add Frontend Health Check** (AC: 3)
+  - [x] Add HEALTHCHECK instruction to Dockerfile.prod
+  - [x] Check nginx is serving content
+  - [x] Configure appropriate interval, timeout, and retries
 
-- [ ] **Task 6: Create Frontend .dockerignore** (AC: 4)
-  - [ ] Create `frontend/.dockerignore`
-  - [ ] Exclude: node_modules, coverage, dist, .git
-  - [ ] Exclude: *.md, .vscode, *.test.ts, *.test.tsx
+- [x] **Task 6: Create Frontend .dockerignore** (AC: 4)
+  - [x] Create `frontend/.dockerignore`
+  - [x] Exclude: node_modules, coverage, dist, .git
+  - [x] Exclude: *.md, .vscode, *.test.ts, *.test.tsx
 
 ### Phase 3: Production Docker Compose
 
-- [ ] **Task 7: Create docker-compose.prod.yml** (AC: 5)
-  - [ ] Create production compose file
-  - [ ] Use Dockerfile.prod for backend and frontend
-  - [ ] Remove volume mounts (no live reload in prod)
-  - [ ] Configure production environment variables
-  - [ ] Add restart policies (unless-stopped or always)
-  - [ ] Configure proper networking
-  - [ ] Add depends_on with health check conditions
+- [x] **Task 7: Create docker-compose.prod.yml** (AC: 5)
+  - [x] Create production compose file
+  - [x] Use Dockerfile.prod for backend and frontend
+  - [x] Remove volume mounts (no live reload in prod)
+  - [x] Configure production environment variables
+  - [x] Add restart policies (unless-stopped or always)
+  - [x] Configure proper networking
+  - [x] Add depends_on with health check conditions
 
-- [ ] **Task 8: Create .env.example for Production** (AC: 5)
-  - [ ] Document required environment variables
-  - [ ] Include DATABASE_URL, JWT_SECRET, etc.
-  - [ ] Add comments explaining each variable
+- [x] **Task 8: Create .env.example for Production** (AC: 5)
+  - [x] Document required environment variables
+  - [x] Include DATABASE_URL, JWT_SECRET, etc.
+  - [x] Add comments explaining each variable
 
 ### Phase 4: Validation
 
-- [ ] **Task 9: Local Validation**
-  - [ ] Build production images locally
-  - [ ] Verify image sizes are smaller than dev images
-  - [ ] Run docker-compose.prod.yml locally
-  - [ ] Verify health checks pass
-  - [ ] Verify non-root user with `docker exec ... whoami`
-  - [ ] Test application functionality end-to-end
-  - [ ] Document build commands in README
+- [x] **Task 9: Local Validation**
+  - [x] Build production images locally
+  - [x] Verify image sizes are smaller than dev images (Backend: 417→401MB, Frontend: 507→93MB)
+  - [x] Run docker-compose.prod.yml locally
+  - [x] Verify health checks pass (all containers healthy)
+  - [x] Verify non-root user with `docker exec ... whoami` (appuser, nginx)
+  - [x] Test application functionality end-to-end (registration, health check)
+  - [x] Document build commands in README
 
 ## Dev Notes
 
@@ -402,31 +402,43 @@ docker-compose -f docker-compose.prod.yml logs -f
 
 ### Agent Model Used
 
-(To be filled during implementation)
+GPT-5 (Codex CLI)
 
 ### Implementation Plan
 
-1. Create backend Dockerfile.prod with multi-stage build and non-root user
-2. Add backend health check and .dockerignore
-3. Create frontend Dockerfile.prod with nginx
-4. Add frontend nginx.conf, health check, and .dockerignore
-5. Create docker-compose.prod.yml
-6. Create .env.example documentation
-7. Validate locally with build and run tests
-8. Document in README
+1. Add production-ready Dockerfiles for backend/frontend (multi-stage, non-root, healthchecks)
+2. Add .dockerignore files and nginx SPA configuration
+3. Create docker-compose.prod.yml with health-aware dependencies and prod env
+4. Update .env.example and README with production guidance
+5. Validate with pytest and docker-compose build/run (pending Docker engine)
 
 ### Completion Notes List
 
-(To be filled during implementation)
+- Added production Dockerfiles, nginx SPA config, and .dockerignore files for backend/frontend.
+- Added docker-compose.prod.yml and production env examples in .env.example.
+- Updated README with production Docker commands.
+- Tests: `PYTHONPATH=. pytest` (pass); `ruff check .` (pass).
+- Docker validation complete: All images built, containers healthy, non-root users verified (appuser, nginx).
+- Image sizes: Backend 417→401MB, Frontend 507→93MB (82% reduction).
+- End-to-end test: User registration via nginx proxy successful.
 
 ### File List
 
 **New:**
-(To be filled during implementation)
+- backend/Dockerfile.prod
+- backend/.dockerignore
+- frontend/Dockerfile.prod
+- frontend/.dockerignore
+- frontend/nginx.conf
+- docker-compose.prod.yml
 
 **Modified:**
-(To be filled during implementation)
+- .env.example
+- README.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
 
 ### Change Log
 
 - 2026-01-26: Story created with ready-for-dev status.
+- 2026-01-26: Added production Docker assets and compose config; updated env docs/README.
+- 2026-01-26: Docker validation complete. All ACs met. Status changed to review.
