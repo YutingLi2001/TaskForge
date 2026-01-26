@@ -37,11 +37,44 @@ jobs:
       - name: Backend tests
         run: |
           set -euo pipefail
-          python -m unittest discover -s backend/tests 2>&1 | tee backend-tests.log
+          python -m pytest -q 2>&1 | tee backend-tests.log
         shell: bash
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/taskforge_test
           SECRET_KEY: ci-test-secret
+      - name: Backend coverage summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+
+          path = "coverage.xml"
+          if not os.path.exists(path):
+            print("coverage.xml not found; skipping summary.")
+            raise SystemExit(0)
+
+          root = ET.parse(path).getroot()
+          line_rate = root.get("line-rate")
+          if line_rate is None:
+            print("coverage.xml missing line-rate; skipping summary.")
+            raise SystemExit(0)
+
+          pct = round(float(line_rate) * 100, 2)
+          summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary_path:
+            with open(summary_path, "a", encoding="utf-8") as handle:
+              handle.write("### Backend Coverage\n\n")
+              handle.write(f"- Line coverage: **{pct}%**\n")
+          PY
+      - name: Upload backend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: |
+            coverage.xml
+            htmlcov/
       - name: Upload backend logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -71,7 +104,7 @@ jobs:
       - name: Frontend tests
         run: |
           set -euo pipefail
-          cd frontend && npm run test 2>&1 | tee ../frontend-tests.log
+          cd frontend && npm run test -- --coverage 2>&1 | tee ../frontend-tests.log
         shell: bash
       - name: Frontend build
         run: |
@@ -83,6 +116,42 @@ jobs:
           set -euo pipefail
           cd frontend && npm run typecheck:tests 2>&1 | tee ../frontend-typecheck-tests.log
         shell: bash
+      - name: Frontend coverage summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          import os
+
+          path = "frontend/coverage/coverage-summary.json"
+          if not os.path.exists(path):
+            print("coverage-summary.json not found; skipping summary.")
+            raise SystemExit(0)
+
+          with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+
+          total = data.get("total", {})
+          lines = total.get("lines", {}).get("pct")
+          functions = total.get("functions", {}).get("pct")
+          branches = total.get("branches", {}).get("pct")
+          statements = total.get("statements", {}).get("pct")
+
+          summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary_path:
+            with open(summary_path, "a", encoding="utf-8") as handle:
+              handle.write("### Frontend Coverage\n\n")
+              handle.write(f"- Lines: **{lines}%**\n")
+              handle.write(f"- Functions: **{functions}%**\n")
+              handle.write(f"- Branches: **{branches}%**\n")
+              handle.write(f"- Statements: **{statements}%**\n")
+          PY
+      - name: Upload frontend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
       - name: Upload frontend logs
         if: always()
         uses: actions/upload-artifact@v4

@@ -65,7 +65,7 @@ development_status:
   # Epic 4: CI/CD & DevOps
   epic-4: in-progress
   4-1-github-actions-ci: done
-  4-2-test-coverage-reporting: backlog
+  4-2-test-coverage-reporting: review
   4-3-production-docker: backlog
 
   # Epic 5: Production Deployment
