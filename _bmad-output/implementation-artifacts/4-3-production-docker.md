@@ -1,6 +1,6 @@
 # Story 4.3: Production Docker Configuration
 
-Status: review
+Status: done
 
 ## Story
 
