@@ -1,6 +1,6 @@
 # Story 4.2: Test Coverage Reporting
 
-Status: review
+Status: done
 
 ## Story
 
