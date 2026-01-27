@@ -9,6 +9,18 @@ A full-stack personal task and project tracking application built with FastAPI, 
 
 ## Production Docker
 
+### Windows Scripts (Recommended)
+
+```batch
+# Start production stack (with health checks and security verification)
+scripts\windows\run-localhost-prod.bat
+
+# Start with fresh database
+scripts\windows\run-localhost-prod-reset.bat
+```
+
+### Manual Commands
+
 Build and run the production stack locally:
 
 ```bash
@@ -28,4 +40,16 @@ Verify container users:
 ```bash
 docker exec taskforge-backend-1 whoami
 docker exec taskforge-frontend-1 whoami
+```
+
+## Development Docker
+
+### Windows Scripts
+
+```batch
+# Start development stack
+scripts\windows\run-localhost.bat
+
+# Start with fresh database
+scripts\windows\run-localhost-reset.bat
 ```
