@@ -69,8 +69,10 @@ development_status:
   4-3-production-docker: done
 
   # Epic 5: Production Deployment
+  # DECISION (2026-01-27): Changed from AWS Lightsail to Oracle Cloud Free Tier
+  # See: _bmad-output/implementation-artifacts/adr-2026-01-27-oracle-cloud.md
   epic-5: backlog
-  5-1-aws-lightsail-setup: backlog
+  5-1-oracle-cloud-setup: backlog  # was: 5-1-aws-lightsail-setup
   5-2-database-migrations: backlog
   5-3-ssl-https: backlog
   5-4-monitoring-logging: backlog

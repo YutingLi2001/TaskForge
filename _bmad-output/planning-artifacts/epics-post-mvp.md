@@ -76,10 +76,11 @@ Automated continuous integration and delivery pipeline ensures code quality and 
 **Priority:** Critical (Foundation for all future work)
 
 ### Epic 5: Production Deployment
-Application is deployed to AWS Lightsail with proper infrastructure, security, and monitoring.
+Application is deployed to Oracle Cloud Infrastructure (OCI) Always Free Tier with proper infrastructure, security, and monitoring.
 **FRs covered:** FR17, FR18, FR19, FR20
 **Depends on:** Epic 4 (CI/CD)
 **Priority:** High (Required to go live)
+**Decision:** Changed from AWS Lightsail to Oracle Cloud on 2026-01-27 (see [ADR](../implementation-artifacts/adr-2026-01-27-oracle-cloud.md))
 
 ### Epic 6: OAuth Integration
 Users can authenticate using third-party OAuth providers (GitHub, Google) in addition to email/password.
@@ -155,25 +156,30 @@ So that **deployments are fast and secure**.
 
 ## Epic 5: Production Deployment
 
-Application is deployed to AWS Lightsail with proper infrastructure, security, and monitoring.
+Application is deployed to Oracle Cloud Infrastructure (OCI) Always Free Tier with proper infrastructure, security, and monitoring.
 
-### Story 5.1: AWS Lightsail Setup
+> **Architecture Decision (2026-01-27):** Changed from AWS Lightsail to Oracle Cloud.
+> See [ADR-2026-01-27-Oracle-Cloud](../implementation-artifacts/adr-2026-01-27-oracle-cloud.md) for rationale.
+
+### Story 5.1: Oracle Cloud Setup
 
 As a **developer**,
-I want **the application deployed to AWS Lightsail**,
-So that **users can access it on the internet**.
+I want **the application deployed to Oracle Cloud Infrastructure**,
+So that **users can access it on the internet for free**.
 
 **Acceptance Criteria:**
 
-**Given** I have AWS credentials configured
+**Given** I have Oracle Cloud account configured
 **When** I run the deployment process
-**Then** Lightsail container service is created
-**And** PostgreSQL database is provisioned
+**Then** ARM-based VM instance is provisioned (Always Free tier)
+**And** Docker and Docker Compose are installed
+**And** PostgreSQL runs in container with persistent volume
 **And** Frontend and backend containers are deployed
-**And** Public domain/IP is accessible
+**And** Public IP is accessible
 **And** Environment variables are securely configured
+**And** Firewall rules allow HTTP/HTTPS traffic
 
-*Includes: Deployment documentation, infrastructure scripts*
+*Includes: OCI setup guide, deployment scripts, ARM Docker images*
 
 ### Story 5.2: Database Migrations (Alembic)
 
@@ -350,7 +356,7 @@ So that **I can catch integration issues**.
 
 ### Phase 2: Production Ready (Week 2-3)
 3. **Story 4.3: Production Docker** - Deployment prep
-4. **Story 5.1: AWS Lightsail Setup** - Go live
+4. **Story 5.1: Oracle Cloud Setup** - Go live (free tier)
 5. **Story 5.2: Database Migrations** - Schema management
 6. **Story 5.3: SSL/HTTPS** - Security
 
@@ -380,7 +386,7 @@ MVP Complete (Epics 1-3)
     │       │                              │
     │       └── 4.3 Production Docker ─────┼── Epic 5: Production Deployment
     │                                      │       │
-    │                                      │       ├── 5.1 AWS Lightsail
+    │                                      │       ├── 5.1 Oracle Cloud Setup
     │                                      │       ├── 5.2 Database Migrations
     │                                      │       ├── 5.3 SSL/HTTPS
     │                                      │       └── 5.4 Monitoring
