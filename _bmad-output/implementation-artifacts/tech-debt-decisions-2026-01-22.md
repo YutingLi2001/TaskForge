@@ -11,7 +11,7 @@ Following a comprehensive code/architecture audit that identified 17 issues (3 H
 
 - **Auth0** for authentication (replacing current JWT implementation)
 - **Google/GitHub Sign-In** for social login
-- **AWS Lightsail** for deployment (configuration deferred)
+- **Oracle Cloud** for deployment (changed from AWS Lightsail on 2026-01-27; see [ADR](./adr-2026-01-27-oracle-cloud.md))
 
 ---
 
