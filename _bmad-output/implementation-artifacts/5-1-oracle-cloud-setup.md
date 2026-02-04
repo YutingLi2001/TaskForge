@@ -1,6 +1,9 @@
 # Story 5.1: Oracle Cloud Setup
 
-Status: ready-for-dev
+Status: backlog
+
+> **Decision (2026-01-27):** Story moved to backlog. Cloud deployment paused until a cost-efficient
+> hosting solution is finalized. Story will be refined and polished in the meantime.
 
 ## Story
 
@@ -34,9 +37,9 @@ So that **users can access it on the internet for free**.
 ### Phase 1: Oracle Cloud Account & Infrastructure Setup
 
 - [ ] **Task 1: Create Oracle Cloud Account** (AC: 1)
-  - [ ] Sign up for Oracle Cloud Free Tier at cloud.oracle.com
-  - [ ] Complete identity verification
-  - [ ] Note tenancy OCID and home region
+  - [x] Sign up for Oracle Cloud Free Tier at cloud.oracle.com
+  - [x] Complete identity verification
+  - [x] Note tenancy OCID and home region
   - [ ] Document account setup in deployment guide
 
 - [ ] **Task 2: Provision ARM VM Instance** (AC: 1)
