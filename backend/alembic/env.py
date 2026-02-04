@@ -29,7 +29,13 @@ def _get_sync_database_url() -> str:
     if url.drivername == "postgresql+asyncpg":
         url = url.set(drivername="postgresql+psycopg2")
     elif url.drivername == "sqlite+aiosqlite":
+        # Convert async SQLite driver to sync
         url = url.set(drivername="sqlite")
+        # Special handling for in-memory databases: use shared cache
+        # so migrations and app/tests see the same in-memory database
+        if url.database == ":memory:" or ":memory:" in str(url):
+            # Use shared cache URI for in-memory SQLite
+            return "sqlite:///:memory:?cache=shared&uri=true"
     elif url.drivername == "mysql+aiomysql":
         url = url.set(drivername="mysql+pymysql")
 
@@ -79,10 +85,13 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    # Use StaticPool for in-memory SQLite to preserve the database across connections
+    poolclass = pool.StaticPool if ":memory:" in sync_database_url else pool.NullPool
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
+        poolclass=poolclass,
     )
 
     with connectable.connect() as connection:
