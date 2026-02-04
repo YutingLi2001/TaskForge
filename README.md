@@ -86,6 +86,23 @@ docker exec taskforge-backend-1 whoami   # Should be: appuser
 docker exec taskforge-frontend-1 whoami  # Should be: nginx
 ```
 
+### Migrations
+
+```bash
+# Generate a migration after model changes
+cd backend
+alembic revision --autogenerate -m "Describe change"
+
+# Apply migrations
+alembic upgrade head
+
+# Roll back one migration
+alembic downgrade -1
+
+# Run migrations programmatically (used in Docker entrypoints)
+python run_migrations.py
+```
+
 ### Testing
 
 ```bash
