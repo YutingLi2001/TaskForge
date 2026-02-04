@@ -5,13 +5,13 @@ from sqlalchemy import engine_from_config, pool
 from sqlalchemy.engine import make_url
 
 try:
+    import app.models  # noqa: F401  - Needed to register models with SQLAlchemy metadata
     from app.config import DATABASE_URL
     from app.database import Base
-    import app.models  # Ensure models are registered with SQLAlchemy metadata.
 except ModuleNotFoundError:  # Allow running Alembic from repo root in tests.
+    import backend.app.models  # noqa: F401  - Needed to register models
     from backend.app.config import DATABASE_URL
     from backend.app.database import Base
-    import backend.app.models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

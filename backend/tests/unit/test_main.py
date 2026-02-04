@@ -7,9 +7,9 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
+from backend.app import config as app_config
 from backend.app import database as db
 from backend.app import main
-from backend.app import config as app_config
 from backend.tests.utils.migrations import build_test_db_url, reset_database
 
 
