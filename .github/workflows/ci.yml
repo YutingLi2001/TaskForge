@@ -34,6 +34,15 @@ jobs:
           set -euo pipefail
           python -m ruff check backend/ 2>&1 | tee backend-ruff.log
         shell: bash
+      - name: Run backend migrations
+        run: |
+          set -euo pipefail
+          cd backend
+          python run_migrations.py
+        shell: bash
+        env:
+          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/taskforge_test
+          SECRET_KEY: ci-test-secret
       - name: Backend tests
         run: |
           set -euo pipefail

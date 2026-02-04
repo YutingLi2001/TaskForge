@@ -61,14 +61,19 @@ async def init_db(max_attempts: int = 10, delay_seconds: float = 1.0) -> None:
     last_error = None
     for _ in range(max_attempts):
         try:
-            async with db.engine.begin() as conn:
-                await conn.run_sync(db.Base.metadata.create_all)
+            await asyncio.to_thread(_run_migrations)
             return
-        except (OperationalError, OSError) as exc:
+        except (OperationalError, OSError, Exception) as exc:
             last_error = exc
             await asyncio.sleep(delay_seconds)
     if last_error:
         raise last_error
+
+
+def _run_migrations() -> None:
+    from run_migrations import run_migrations
+
+    run_migrations()
 
 
 @app.get("/api/health")

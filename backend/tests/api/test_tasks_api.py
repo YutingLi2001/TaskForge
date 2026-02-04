@@ -5,7 +5,9 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool, StaticPool
+from sqlalchemy.pool import NullPool
+
+from backend.tests.utils.migrations import build_test_db_url, reset_database
 
 db = None
 get_db = None
@@ -14,8 +16,9 @@ get_db = None
 class TasksApiTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
-        database_url = os.environ["DATABASE_URL"]
+        cls.database_url = build_test_db_url("tasks_api", async_driver=True)
+        os.environ["DATABASE_URL"] = cls.database_url
+        database_url = cls.database_url
 
         global db, get_db
         from backend.app import database as db
@@ -25,7 +28,7 @@ class TasksApiTests(unittest.TestCase):
             cls.engine = create_async_engine(
                 database_url,
                 connect_args={"check_same_thread": False},
-                poolclass=StaticPool,
+                poolclass=NullPool,
             )
         else:
             cls.engine = create_async_engine(database_url, poolclass=NullPool)
@@ -37,7 +40,7 @@ class TasksApiTests(unittest.TestCase):
             class_=AsyncSession,
             expire_on_commit=False,
         )
-        asyncio.run(cls._create_tables())
+        reset_database(cls.database_url)
 
         async def override_get_db():
             async with db.SessionLocal() as session:
@@ -55,16 +58,6 @@ class TasksApiTests(unittest.TestCase):
         cls.client = TestClient(main.app)
 
     @classmethod
-    async def _create_tables(cls):
-        async with cls.engine.begin() as conn:
-            await conn.run_sync(db.Base.metadata.create_all)
-
-    @classmethod
-    async def _drop_tables(cls):
-        async with cls.engine.begin() as conn:
-            await conn.run_sync(db.Base.metadata.drop_all)
-
-    @classmethod
     def tearDownClass(cls):
         asyncio.run(cls.engine.dispose())
 
@@ -72,8 +65,7 @@ class TasksApiTests(unittest.TestCase):
         asyncio.run(self._reset_db())
 
     async def _reset_db(self):
-        await self._drop_tables()
-        await self._create_tables()
+        await asyncio.to_thread(reset_database, self.database_url)
 
     async def _create_user(self, session: AsyncSession, email: str, password: str):
         from backend.app.utils.auth import hash_password

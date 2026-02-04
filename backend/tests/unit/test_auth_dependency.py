@@ -1,23 +1,26 @@
 import asyncio
+import os
 import unittest
 from datetime import timedelta
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool
 
-from backend.app.database import Base
 from backend.app.models.user import User
 from backend.app.utils.auth import create_access_token, get_current_user, hash_password
+from backend.tests.utils.migrations import build_test_db_url, reset_database
 
 
 class AuthDependencyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.database_url = build_test_db_url("auth_dependency_unit", async_driver=True)
+        os.environ["DATABASE_URL"] = cls.database_url
         cls.engine = create_async_engine(
-            "sqlite+aiosqlite:///:memory:",
+            cls.database_url,
             connect_args={"check_same_thread": False},
-            poolclass=StaticPool,
+            poolclass=NullPool,
         )
         cls.SessionLocal = async_sessionmaker(
             autocommit=False,
@@ -26,17 +29,7 @@ class AuthDependencyTests(unittest.TestCase):
             class_=AsyncSession,
             expire_on_commit=False,
         )
-        asyncio.run(cls._create_tables())
-
-    @classmethod
-    async def _create_tables(cls):
-        async with cls.engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-
-    @classmethod
-    async def _drop_tables(cls):
-        async with cls.engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
+        reset_database(cls.database_url)
 
     @classmethod
     def tearDownClass(cls):
@@ -46,8 +39,7 @@ class AuthDependencyTests(unittest.TestCase):
         asyncio.run(self._reset_db())
 
     async def _reset_db(self):
-        await self._drop_tables()
-        await self._create_tables()
+        await asyncio.to_thread(reset_database, self.database_url)
 
     async def _create_user(
         self,
