@@ -35,19 +35,21 @@ This document provides the epic and story breakdown for TaskForge post-MVP enhan
 |------|--------|------------------|-------------|
 | Epic 4: CI/CD & DevOps | ✅ Done | 3/3 | FR15, FR16 |
 | Epic 5: Database Migrations | ✅ Done | 1/1 | FR18 |
+| Epic 5: Logging & Health Checks | 📋 Ready | 0/1 | FR20 (partial) |
 | Epic 6: OAuth Integration | 📋 Ready | 0/3 | FR21, FR22, FR23 |
 | Epic 7: Enhanced Testing | 🔄 In Progress | 0/3 | FR24 |
 
-**Progress:** 4/10 stories complete (40%)
-**Note:** OAuth can be developed locally using localhost callback URLs
+**Progress:** 4/11 stories complete (36%)
+**Note:** OAuth and logging infrastructure can be developed locally
 
 ### Production/Cloud Track (On Hold)
 
 | Epic | Status | Stories | FRs Covered |
 |------|--------|---------|-------------|
-| Epic 5: Production Infrastructure | 📦 On Hold | 0/3 | FR17, FR19, FR20 |
+| Epic 5: Production Infrastructure | 📦 On Hold | 0/3 | FR17, FR19, FR20 (partial) |
 
 **Status:** 3 stories on hold until cloud deployment is prioritized
+**Note:** Story 5.4a (Logging & Health Checks) moved to Local Development track
 
 ---
 
@@ -108,6 +110,14 @@ Database schema changes managed via Alembic migrations for versioning and revers
 **Completed:** 2026-02-04
 **Note:** Extracted from Production Deployment epic as it's essential for local development
 
+#### Epic 5: Logging & Health Checks 📋 READY
+Structured logging infrastructure and health check endpoints for application observability.
+**FRs covered:** FR20 (partial - local development aspects)
+**Status:** Ready for implementation (0/1 story)
+**Depends on:** None (independent)
+**Priority:** MEDIUM - Can be done alongside Enhanced Testing or OAuth
+**Note:** Logging infrastructure, health checks, and error handling can be fully implemented locally. Production alerting (Story 5.4b) remains on hold.
+
 #### Epic 6: OAuth Integration 📋 READY
 Users can authenticate using third-party OAuth providers (GitHub, Google) in addition to email/password.
 **FRs covered:** FR21, FR22, FR23
@@ -126,12 +136,12 @@ Comprehensive test coverage with pytest, expanded frontend tests, and E2E testin
 ### Production/Cloud Track (On Hold)
 
 #### Epic 5: Production Infrastructure 📦 ON HOLD
-Application deployed to Oracle Cloud Infrastructure with proper security and monitoring.
-**FRs covered:** FR17, FR19, FR20
-**Stories:** 5.1 (Oracle Cloud Setup), 5.3 (SSL/HTTPS), 5.4 (Monitoring)
+Application deployed to Oracle Cloud Infrastructure with proper security and production monitoring.
+**FRs covered:** FR17, FR19, FR20 (partial)
+**Stories:** 5.1 (Oracle Cloud Setup), 5.3 (SSL/HTTPS), 5.4b (Production Monitoring)
 **Status:** On hold - requires cloud deployment decision
 **Decision:** Changed from AWS Lightsail to Oracle Cloud on 2026-01-27 (see [ADR](../implementation-artifacts/adr-2026-01-27-oracle-cloud.md))
-**Note:** Story 5.2 (Database Migrations) was moved to Local Development Track and completed
+**Note:** Stories 5.2 (Database Migrations) and 5.4a (Logging & Health Checks) were moved to Local Development Track
 
 ---
 
@@ -196,13 +206,18 @@ So that **deployments are fast and secure**.
 ## Epic 5: Production Deployment & Database Management
 
 > **Reorganization Note (2026-02-04):** This epic has been split into two tracks:
-> - **Local Development:** Story 5.2 (Database Migrations) - ✅ COMPLETED
-> - **Production/Cloud:** Stories 5.1, 5.3, 5.4 - 📦 ON HOLD
+> - **Local Development:**
+>   - Story 5.2 (Database Migrations) - ✅ COMPLETED
+>   - Story 5.4a (Logging & Health Checks) - 📋 READY
+> - **Production/Cloud:**
+>   - Story 5.1 (Oracle Cloud Setup) - 📦 ON HOLD
+>   - Story 5.3 (SSL/HTTPS Configuration) - 📦 ON HOLD
+>   - Story 5.4b (Production Monitoring) - 📦 ON HOLD
 >
 > **Architecture Decision (2026-01-27):** Changed from AWS Lightsail to Oracle Cloud.
 > See [ADR-2026-01-27-Oracle-Cloud](../implementation-artifacts/adr-2026-01-27-oracle-cloud.md) for rationale.
 
-This epic originally covered production deployment to Oracle Cloud Infrastructure (OCI) Always Free Tier with proper infrastructure, security, and monitoring. Story 5.2 (Database Migrations) was prioritized for local development and has been completed. The remaining production infrastructure stories (5.1, 5.3, 5.4) are on hold pending cloud deployment decision.
+This epic originally covered production deployment to Oracle Cloud Infrastructure (OCI) Always Free Tier with proper infrastructure, security, and monitoring. Stories 5.2 (Database Migrations) and 5.4a (Logging & Health Checks) were prioritized for local development. The remaining production infrastructure stories (5.1, 5.3, 5.4b) are on hold pending cloud deployment decision.
 
 ### Story 5.1: Oracle Cloud Setup 📦 ON HOLD
 
@@ -269,24 +284,50 @@ So that **my data is transmitted securely**.
 **And** SSL certificate is valid and auto-renewed
 **And** security headers are properly configured
 
-### Story 5.4: Monitoring & Logging 📦 ON HOLD
+### Story 5.4a: Logging & Health Checks 📋 READY
+
+**Track:** Local Development
+**Status:** Ready - can be fully implemented locally
+**Depends on:** None
+
+As a **developer**,
+I want **structured logging and health check endpoints**,
+So that **I can monitor application health and debug issues locally**.
+
+**Acceptance Criteria:**
+
+**Given** the application is running
+**When** requests are processed or errors occur
+**Then** structured logs are emitted with context (user ID, request ID, timestamp)
+**And** logs use consistent format (JSON for easy parsing)
+**And** log levels are properly categorized (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+**And** health check endpoint (`/health`) returns application status
+**And** health check includes database connectivity status
+**And** errors include stack traces and relevant context
+
+*Includes: Structured logging setup (structlog or similar), health check endpoints, error handling middleware, log formatting*
+
+### Story 5.4b: Production Monitoring 📦 ON HOLD
 
 **Track:** Production/Cloud
 **Status:** On hold - requires production environment
-**Depends on:** Story 5.1 (Oracle Cloud Setup)
+**Depends on:** Story 5.1 (Oracle Cloud Setup), Story 5.4a (Logging & Health Checks)
 
 As a **developer**,
-I want **application health and errors monitored**,
-So that **I can detect and diagnose issues quickly**.
+I want **production-grade monitoring and alerting**,
+So that **I'm notified of critical issues in real-time**.
 
 **Acceptance Criteria:**
 
 **Given** the application is running in production
-**When** errors occur or health degrades
-**Then** errors are logged with context
-**And** health check endpoint returns status
-**And** alerts are triggered for critical issues
-**And** logs are accessible for debugging
+**When** critical errors occur or health degrades
+**Then** alerts are triggered via email/SMS/PagerDuty
+**And** logs are aggregated in cloud service (CloudWatch, Datadog, or Sentry)
+**And** uptime is monitored by external service
+**And** long-term log retention is configured
+**And** performance metrics are tracked and visualized
+
+*Includes: Alerting service integration, cloud log aggregation, external uptime monitoring, metrics dashboards*
 
 ---
 
@@ -443,21 +484,22 @@ So that **I can catch integration issues**.
 6. **Story 7.2: Frontend Test Expansion** - Comprehensive UI coverage
 7. **Story 7.3: E2E Playwright** - Full user flow validation
 
-#### Phase 3: OAuth Integration 📋 NEXT UP
-8. **Story 6.1: GitHub OAuth** - Developer-friendly auth (localhost callbacks)
-9. **Story 6.2: Google OAuth** - Broad reach (localhost callbacks)
-10. **Story 6.3: Account Linking** - UX polish
+#### Phase 3: OAuth Integration & Observability 📋 NEXT UP
+8. **Story 5.4a: Logging & Health Checks** - Structured logging and health endpoints
+9. **Story 6.1: GitHub OAuth** - Developer-friendly auth (localhost callbacks)
+10. **Story 6.2: Google OAuth** - Broad reach (localhost callbacks)
+11. **Story 6.3: Account Linking** - UX polish
 
-**Rationale:** Complete all local development capabilities before moving to production deployment. OAuth can be fully developed and tested locally using localhost callback URLs. This allows for thorough testing and iteration without cloud costs.
+**Rationale:** Complete all local development capabilities before moving to production deployment. Logging infrastructure provides observability for local development and testing. OAuth can be fully developed and tested locally using localhost callback URLs. This allows for thorough testing and iteration without cloud costs.
 
 ### Production/Cloud Track (On Hold - Future Phases)
 
 #### Phase 4: Production Infrastructure (When Ready to Deploy)
-11. **Story 5.1: Oracle Cloud Setup** - Production environment
-12. **Story 5.3: SSL/HTTPS** - Security certificates
-13. **Story 5.4: Monitoring & Logging** - Observability
+12. **Story 5.1: Oracle Cloud Setup** - Production environment
+13. **Story 5.3: SSL/HTTPS** - Security certificates
+14. **Story 5.4b: Production Monitoring** - Cloud alerting and log aggregation
 
-**Note:** Phase 4 requires cloud deployment and production domain. On hold until production deployment is prioritized. When moving to production, OAuth callback URLs will need to be updated to production domain.
+**Note:** Phase 4 requires cloud deployment and production domain. On hold until production deployment is prioritized. When moving to production, OAuth callback URLs will need to be updated to production domain, and logging will be connected to cloud services.
 
 ---
 
@@ -484,19 +526,23 @@ MVP Complete (Epics 1-3)
     │               │                                          │
     │               └── 5.2 Alembic ✅                         ├── 5.1 Oracle Cloud Setup 📦
     │                                                          ├── 5.3 SSL/HTTPS 📦
-    │       Epic 7: Enhanced Testing 🔄                        └── 5.4 Monitoring 📦
-    │               │
-    │               ├── 7.1 Pytest Migration
-    │               ├── 7.2 Frontend Test Expansion
-    │               └── 7.3 E2E Playwright
-    │
-    │       Epic 6: OAuth Integration 📋
-    │               │
-    │               ├── 6.1 GitHub OAuth (localhost callbacks)
-    │               ├── 6.2 Google OAuth (localhost callbacks)
-    │               └── 6.3 Account Linking
-    │
-    └──────────────────────────────────────────────────────────┘
+    │       Epic 5: Logging & Health Checks 📋                └── 5.4b Production Monitoring 📦
+    │               │                                                   │
+    │               └── 5.4a Structured Logging                         │
+    │                                                                   │
+    │       Epic 7: Enhanced Testing 🔄                                 │
+    │               │                                                   │
+    │               ├── 7.1 Pytest Migration                            │
+    │               ├── 7.2 Frontend Test Expansion                     │
+    │               └── 7.3 E2E Playwright                              │
+    │                                                                   │
+    │       Epic 6: OAuth Integration 📋                                │
+    │               │                                                   │
+    │               ├── 6.1 GitHub OAuth (localhost callbacks)          │
+    │               ├── 6.2 Google OAuth (localhost callbacks)          │
+    │               └── 6.3 Account Linking                             │
+    │                                                                   │
+    └──────────────────────────────────────────────────────────────────┘
 
 Legend:
 ✅ = Completed
